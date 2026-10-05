@@ -1,14 +1,8 @@
 {
-  "name": {
-    "zh-CN": "ServerStatus Design",
-    "en": "ServerStatus Design"
-  },
+  "name": "ServerStatus Design",
   "short": "ServerStatusDesign",
-  "description": {
-    "zh-CN": "采用 shadcn/ui 现代设计规范的 ServerStatus 监控主题",
-    "en": "A modern ServerStatus monitoring theme built with shadcn/ui design standards"
-  },
-  "version": "0.0.1",
+  "description": "采用 shadcn/ui 现代设计规范的 ServerStatus 监控主题",
+  "version": "0.0.2",
   "author": "tom2almighty",
   "url": "https://github.com/tom2almighty/komari-serverstatus-design",
   "preview": "preview.png",

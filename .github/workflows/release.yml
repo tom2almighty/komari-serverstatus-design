@@ -54,7 +54,7 @@ jobs:
           case "$GITHUB_REF_NAME" in
             *-*) args+=(--prerelease) ;;
           esac
-          gh release create "$GITHUB_REF_NAME" theme.zip "${args[@]}"
+          gh release create "$GITHUB_REF_NAME" theme.zip "${args[@]}" --clobber
 
       - name: Append the package digest
         env:

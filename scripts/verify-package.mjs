@@ -58,11 +58,16 @@ try {
 } catch {
   problems.push("komari-theme.json is not valid JSON")
 }
-check(Boolean(manifest.name), "komari-theme.json needs a name")
-check(Boolean(manifest.short), "komari-theme.json needs a short")
+check(typeof manifest.name === "string" && manifest.name.trim().length > 0, "komari-theme.json name must be a non-empty string")
+check(typeof manifest.short === "string" && manifest.short.trim().length > 0, "komari-theme.json short must be a non-empty string")
 check(/^[A-Za-z0-9_-]+$/.test(manifest.short ?? ""), "short may only contain letters, digits, underscores and hyphens")
 check(manifest.short !== "default", "short cannot be `default`")
-check(Boolean(manifest.version), "komari-theme.json needs a version")
+check(typeof manifest.version === "string" && manifest.version.trim().length > 0, "komari-theme.json version must be a non-empty string")
+check(typeof manifest.author === "string" && manifest.author.trim().length > 0, "komari-theme.json author must be a non-empty string")
+check(typeof manifest.description === "string", "komari-theme.json description must be a string")
+
+const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8"))
+check(manifest.version === pkg.version, `komari-theme.json version (${manifest.version}) does not match package.json version (${pkg.version})`)
 
 const html = read("dist/index.html")
 for (const placeholder of PLACEHOLDERS) {
