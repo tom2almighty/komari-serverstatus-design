@@ -27,18 +27,20 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Check the tag against the manifest
+      - name: Sync version from git tag
         id: version
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
-          manifest="$(node -p "require('./komari-theme.json').version")"
-          if [ "$tag" != "$manifest" ]; then
-            echo "::error::tag v$tag does not match komari-theme.json version $manifest"
-            exit 1
-          fi
-          echo "version=$manifest" >> "$GITHUB_OUTPUT"
-
+          node -e "
+            const fs = require('fs');
+            for (const file of ['komari-theme.json', 'package.json']) {
+              const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+              data.version = '$tag';
+              fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
+            }
+          "
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
       - name: Build
         run: bun run build
 
