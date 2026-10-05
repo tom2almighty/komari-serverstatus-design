@@ -1,0 +1,101 @@
+{
+  "name": {
+    "zh-CN": "ServerStatus Design",
+    "en": "ServerStatus Design"
+  },
+  "short": "ServerStatusDesign",
+  "description": {
+    "zh-CN": "采用 shadcn/ui 现代设计规范的 ServerStatus 监控主题",
+    "en": "A modern ServerStatus monitoring theme built with shadcn/ui design standards"
+  },
+  "version": "0.0.1",
+  "author": "tom2almighty",
+  "url": "https://github.com/tom2almighty/komari-serverstatus-design",
+  "preview": "preview.png",
+  "configuration": {
+    "type": "managed",
+    "name": {
+      "zh-CN": "ServerStatus Design 设置",
+      "en": "ServerStatus Design Settings"
+    },
+    "data": [
+      {
+        "name": {
+          "zh-CN": "外观配置",
+          "en": "Appearance Settings"
+        },
+        "type": "title"
+      },
+      {
+        "key": "default_appearance",
+        "name": {
+          "zh-CN": "默认明暗模式",
+          "en": "Default Appearance"
+        },
+        "type": "select",
+        "options": "system,light,dark",
+        "default": "system",
+        "help": "系统默认外观模式（跟随系统、浅色、深色）"
+      },
+      {
+        "key": "custom_primary",
+        "name": {
+          "zh-CN": "自定义主色 (HEX 或 CSS 色值)",
+          "en": "Custom Primary Color"
+        },
+        "type": "string",
+        "default": "",
+        "help": "留空使用 shadcn 默认深黑/微白主色"
+      },
+      {
+        "key": "custom_radius",
+        "name": {
+          "zh-CN": "默认圆角大小",
+          "en": "Default Radius"
+        },
+        "type": "select",
+        "options": "0rem,0.3rem,0.5rem,0.75rem,1.0rem",
+        "default": "0.5rem",
+        "help": "组件与卡片的基础圆角大小"
+      },
+      {
+        "key": "rpcTransport",
+        "name": {
+          "zh-CN": "监控通信方式",
+          "en": "Monitoring Transport"
+        },
+        "type": "select",
+        "options": "WebSocket,HTTP",
+        "default": "WebSocket",
+        "help": "WebSocket 为默认实时通信方式，断线时自动以 HTTP 轮询保底；HTTP 模式不会建立 WebSocket。"
+      },
+      {
+        "key": "max_width",
+        "name": {
+          "zh-CN": "页面最大宽度 (px)",
+          "en": "Page Max Width (px)"
+        },
+        "type": "number",
+        "default": 1200,
+        "help": "内容区最大宽度，单位像素，推荐 1024 - 1440；越宽表格显示的列越多，越窄越紧凑"
+      },
+      {
+        "name": {
+          "zh-CN": "公告内容",
+          "en": "Notice & Content"
+        },
+        "type": "title"
+      },
+      {
+        "key": "announcement",
+        "name": {
+          "zh-CN": "站点公告",
+          "en": "Announcement"
+        },
+        "type": "richtext",
+        "default": "",
+        "help": "显示在首页顶部的提示公告，支持文字"
+      }
+    ]
+  }
+}

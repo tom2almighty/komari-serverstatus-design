@@ -1,0 +1,71 @@
+name: Release
+
+# A `vX.Y.Z` tag publishes the theme package the market downloads. Keep the tag
+# and komari-theme.json's version equal: the market's release monitor compares
+# them, and a mismatch makes the one-click update reinstall the same build every
+# time. The job refuses to publish when they differ.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check the tag against the manifest
+        id: version
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(node -p "require('./komari-theme.json').version")"
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::tag v$tag does not match komari-theme.json version $manifest"
+            exit 1
+          fi
+          echo "version=$manifest" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: bun run build
+
+      - name: Verify the theme package
+        run: bun run verify
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          args=(--title "$GITHUB_REF_NAME" --generate-notes)
+          case "$GITHUB_REF_NAME" in
+            *-*) args+=(--prerelease) ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" theme.zip "${args[@]}"
+
+      - name: Append the package digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          digest="$(sha256sum theme.zip | cut -d' ' -f1)"
+          {
+            gh release view "$GITHUB_REF_NAME" --json body --jq .body
+            printf '\n## 主题包 / Package\n\n'
+            printf -- '- `theme.zip` — %s\n' "${{ steps.version.outputs.version }}"
+            printf -- '- SHA-256 `%s`\n' "$digest"
+          } > notes.md
+          gh release edit "$GITHUB_REF_NAME" --notes-file notes.md

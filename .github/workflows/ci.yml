@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - .gitignore
+      - LICENSE
+      - preview.png
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - .gitignore
+      - LICENSE
+      - preview.png
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      # tsc -b is the first half of `bun run build`; it is the type check.
+      - name: Build
+        run: bun run build
+
+      - name: Verify the theme package
+        run: bun run verify
+
+      - name: Upload theme.zip
+        uses: actions/upload-artifact@v7
+        with:
+          name: theme
+          path: theme.zip
+          if-no-files-found: error

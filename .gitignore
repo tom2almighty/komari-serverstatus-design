@@ -1,0 +1,12 @@
+node_modules
+dist
+theme.zip
+*.local
+.DS_Store
+.tmp
+refer/
+
+.claude
+.codex
+.vscode
+.agents
