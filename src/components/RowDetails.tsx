@@ -13,7 +13,7 @@ import {
 } from "@/lib/format"
 import { fetchHistory, latencyWindow } from "@/lib/history"
 import { useI18n } from "@/lib/i18n"
-import { knownPing } from "@/lib/pings"
+import { knownPing, recordPing } from "@/lib/pings"
 import { Link } from "@/lib/route"
 import { cn } from "@/lib/utils"
 
@@ -188,28 +188,43 @@ function Overview({ node }: { node: Node }) {
 
 export function RowDetails({ node }: { node: Node }) {
   const { t } = useI18n()
-  const [learned, setLearned] = useState<boolean | null>(null)
-  const has = learned ?? knownPing(node.uuid)
+  const [learned, setLearned] = useState<boolean | null>(() => knownPing(node.uuid) ?? null)
   const [tab, setTab] = useState<string>("latency")
   const isConfigured = node.cpu_cores > 0 || node.mem_total > 0
-  const shown = has === true ? tab : "overview"
-
-  const tabs = [
-    { value: "latency", label: t("detailPingHistory") },
-    { value: "overview", label: t("detailSpecs") },
-  ]
 
   useEffect(() => {
-    if (isConfigured) void fetchHistory(node.uuid, latencyWindow(), "ping")
+    if (!isConfigured) return
+    let active = true
+    fetchHistory(node.uuid, latencyWindow(), "ping")
+      .then((res) => {
+        if (!active) return
+        const has = Boolean(res.ping && res.ping.length > 0)
+        setLearned(has)
+        recordPing(node.uuid, has, latencyWindow())
+      })
+      .catch(() => {
+        if (!active) return
+        setLearned(false)
+      })
+    return () => {
+      active = false
+    }
   }, [node.uuid, isConfigured])
 
   if (!isConfigured) {
     return <p className="px-4 py-4 text-xs text-muted-foreground">{t("loading")}</p>
   }
 
+  const tabs = [
+    { value: "latency", label: t("detailPingHistory") },
+    { value: "overview", label: t("detailSpecs") },
+  ]
+
+  const shown = learned === false ? "overview" : tab
+
   return (
     <div className="@container w-full max-w-full overflow-hidden min-w-0 space-y-2.5 px-0.5 py-0.5 text-sm">
-      {has === true && (
+      {learned !== false && (
         <div className="flex items-center justify-between pb-1 min-w-0">
           <Segmented value={shown} onChange={setTab} options={tabs} label="Details View" />
           <Link
