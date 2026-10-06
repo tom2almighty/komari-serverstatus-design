@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { ArrowLeft } from "lucide-react"
 import {
-  Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer,
+  Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts"
 
@@ -120,6 +120,11 @@ export function Latency({
   const { data, failed, loading, retry } = useHistory(uuid, hours, "ping")
   const [despiked, setDespiked] = usePref<boolean>("despike", false)
   const [smoothed, setSmoothed] = usePref<boolean>("ewma", false)
+  const [hiddenTasks, setHiddenTasks] = useState<Record<number, boolean>>({})
+
+  const toggleTask = useCallback((taskId: number) => {
+    setHiddenTasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }))
+  }, [])
 
   useEffect(() => {
     if (data) onKnown?.(data.ping.length > 0)
@@ -234,10 +239,48 @@ export function Latency({
                 key={taskId}
                 dataKey={`probe_${taskId}`}
                 name={name}
+                hide={Boolean(hiddenTasks[taskId])}
                 stroke={PALETTE[i % PALETTE.length]}
                 {...SERIES}
               />
             ))}
+            {probeTasks.length > 0 && (
+              <Legend
+                content={() => (
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2 select-none">
+                    {probeTasks.map(([taskId, name], i) => {
+                      const isHidden = Boolean(hiddenTasks[taskId])
+                      const color = PALETTE[i % PALETTE.length]
+                      return (
+                        <button
+                          key={taskId}
+                          type="button"
+                          onClick={() => toggleTask(taskId)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-2xs font-medium transition-all cursor-pointer border",
+                            isHidden
+                              ? "border-dashed border-border/70 bg-muted/20 text-muted-foreground/50 opacity-60 hover:opacity-90"
+                              : "border-border bg-card/90 text-foreground shadow-2xs hover:bg-accent",
+                          )}
+                          title={isHidden ? `${name} (已隐藏，点击显示)` : `${name} (点击隐藏)`}
+                        >
+                          <span
+                            className={cn(
+                              "size-2 rounded-full shrink-0 transition-opacity",
+                              isHidden ? "opacity-30" : "opacity-100",
+                            )}
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className={cn("truncate max-w-44", isHidden && "line-through opacity-70")}>
+                            {name}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
