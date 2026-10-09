@@ -33,10 +33,12 @@ function ProgressBar({
   value,
   online,
   title,
+  label,
 }: {
   value: number | null
   online: boolean
   title?: string
+  label?: string
 }) {
   const safe = online && value !== null ? Math.min(100, Math.max(0, value)) : null
 
@@ -60,7 +62,7 @@ function ProgressBar({
         />
       )}
       <span className="relative z-10 text-2xs md:text-xs font-semibold tabular-nums text-foreground leading-none drop-shadow-2xs">
-        {safe !== null ? `${safe.toFixed(0)}%` : "—"}
+        {label ?? (safe !== null ? `${safe.toFixed(0)}%` : "—")}
       </span>
     </div>
   )
@@ -92,52 +94,66 @@ function TrafficCell({ node }: { node: Node }) {
   const m = node.metrics
   const total = m.month_rx + m.month_tx
   const limit = node.traffic_limit
-
-  if (limit > 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-0.5 leading-none text-2xs md:text-xs">
-        <span className="tnum font-medium text-foreground">
-          {compact(total)}/{compact(limit)}
-        </span>
-        <span className="tnum text-muted-foreground text-2xs">
-          ({percent(total, limit).toFixed(0)}%)
-        </span>
-      </div>
-    )
-  }
+  const hasQuota = limit > 0
 
   return (
-    <div className="flex flex-col items-center justify-center gap-0.5 leading-none text-2xs md:text-xs">
-      <span className="tnum font-medium text-foreground">
-        {compact(m.month_rx)} | {compact(m.month_tx)}
-      </span>
-      <span className="tnum text-muted-foreground text-2xs">
-        {compact(total)}
-      </span>
-    </div>
+    <>
+      {/* 小屏：宽度有限，复用 CPU/内存/硬盘的进度条；无配额时只显示已用流量 */}
+      <div className="md:hidden">
+        <ProgressBar
+          value={hasQuota ? percent(total, limit) : null}
+          online={node.online}
+          title={hasQuota ? pair(total, limit) : compact(total)}
+          label={hasQuota ? undefined : compact(total)}
+        />
+      </div>
+
+      {/* 宽屏：空间充足，展示 已用/配额 与百分比的完整文本 */}
+      <div className="hidden md:flex flex-col items-center justify-center gap-0.5 leading-none text-xs">
+        {hasQuota ? (
+          <>
+            <span className="tnum font-medium text-foreground">
+              {compact(total)}/{compact(limit)}
+            </span>
+            <span className="tnum text-muted-foreground text-2xs">
+              ({percent(total, limit).toFixed(0)}%)
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="tnum font-medium text-foreground">
+              {compact(m.month_rx)} | {compact(m.month_tx)}
+            </span>
+            <span className="tnum text-muted-foreground text-2xs">
+              {compact(total)}
+            </span>
+          </>
+        )}
+      </div>
+    </>
   )
 }
 
 
 /**
- * Strict column percentage definitions that sum to 100% on both mobile (8 columns) and desktop (11 columns).
- * Mobile hides: os, uptime, traffic (3 columns).
- * Mobile retains: status(8%), name(24%), location(7%), load(8.5%), speed(20%), cpu(10.83%), mem(10.83%), disk(10.84%) = 100%
+ * Strict column percentage definitions that sum to 100% on both mobile (9 columns) and desktop (11 columns).
+ * Mobile hides: os, uptime (2 columns).
+ * Mobile retains: status(7%), name(19%), location(6%), load(8%), speed(14%), traffic(11.5%), cpu(11.5%), mem(11.5%), disk(11.5%) = 100%
  * Desktop displays all 11:
  * status(4%), name(17%), os(9%), location(7%), uptime(7%), load(6%), speed(14%), traffic(13%), cpu(7.66%), mem(7.67%), disk(7.67%) = 100%
  */
 const COL_CLASSES = {
-  status: "w-[8%] md:w-[4%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  name: "w-[24%] md:w-[17%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
+  status: "w-[7%] md:w-[4%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  name: "w-[19%] md:w-[17%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
   os: "hidden md:table-cell md:w-[9%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  location: "w-[7%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  location: "w-[6%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   uptime: "hidden md:table-cell md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  load: "w-[8.5%] md:w-[6%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  speed: "w-[20%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  traffic: "hidden md:table-cell md:w-[13%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  cpu: "w-[10.83%] md:w-[7.66%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  mem: "w-[10.83%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  disk: "w-[10.84%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  load: "w-[8%] md:w-[6%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  speed: "w-[14%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  traffic: "w-[11.5%] md:w-[13%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  cpu: "w-[11.5%] md:w-[7.66%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  mem: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  disk: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
 }
 
 type SortField = "name" | "os" | "location" | "uptime" | "load" | "speed" | "traffic" | "cpu" | "mem" | "disk"
@@ -308,10 +324,10 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
         </TableCell>
       </TableRow>
 
-      {/* 展开详细信息行：严格匹配当前视口可见列数 (移动端 8 列，桌面端 11 列)，绝对不挤压或重排父表格 */}
+      {/* 展开详细信息行：严格匹配当前视口可见列数 (移动端 9 列，桌面端 11 列)，绝对不挤压或重排父表格 */}
       {open && (
         <TableRow className="bg-muted/15 hover:bg-muted/15">
-          <TableCell colSpan={isDesktop ? 11 : 8} className="p-0 text-left whitespace-normal">
+          <TableCell colSpan={isDesktop ? 11 : 9} className="p-0 text-left whitespace-normal">
             <div className="w-full max-w-full min-w-0 overflow-hidden p-2.5 sm:p-3.5 bg-muted/20 border-b">
               <RowDetails node={node} />
             </div>
@@ -487,7 +503,7 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
         </div>
       </div>
 
-      {/* 数据表格卡片：百分比固定列宽 + 移动端8列/桌面端11列，完全不横向滚动 */}
+      {/* 数据表格卡片：百分比固定列宽 + 移动端9列/桌面端11列，完全不横向滚动 */}
       <Card className="km-node-card overflow-hidden">
         <CardContent className="p-0">
           <Table
@@ -496,17 +512,17 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
           >
             {/* 使用 colgroup 锁死列宽百分比模型 */}
             <colgroup>
-              <col className="w-[8%] md:w-[4%]" />
-              <col className="w-[24%] md:w-[17%]" />
+              <col className="w-[7%] md:w-[4%]" />
+              <col className="w-[19%] md:w-[17%]" />
               <col className="hidden md:table-column md:w-[9%]" />
-              <col className="w-[7%] md:w-[7%]" />
+              <col className="w-[6%] md:w-[7%]" />
               <col className="hidden md:table-column md:w-[7%]" />
-              <col className="w-[8.5%] md:w-[6%]" />
-              <col className="w-[20%] md:w-[14%]" />
-              <col className="hidden md:table-column md:w-[13%]" />
-              <col className="w-[10.83%] md:w-[7.66%]" />
-              <col className="w-[10.83%] md:w-[7.67%]" />
-              <col className="w-[10.84%] md:w-[7.67%]" />
+              <col className="w-[8%] md:w-[6%]" />
+              <col className="w-[14%] md:w-[14%]" />
+              <col className="w-[11.5%] md:w-[13%]" />
+              <col className="w-[11.5%] md:w-[7.66%]" />
+              <col className="w-[11.5%] md:w-[7.67%]" />
+              <col className="w-[11.5%] md:w-[7.67%]" />
             </colgroup>
 
             <TableHeader>
@@ -602,7 +618,7 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
               {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={isDesktop ? 11 : 8}
+                    colSpan={isDesktop ? 11 : 9}
                     className="h-28 text-center text-muted-foreground text-sm"
                   >
                     {t("noNodes")}
@@ -629,17 +645,17 @@ export function ServerTableSkeleton() {
           containerClassName="relative w-full overflow-hidden"
         >
           <colgroup>
-            <col className="w-[8%] md:w-[4%]" />
-            <col className="w-[24%] md:w-[17%]" />
+            <col className="w-[7%] md:w-[4%]" />
+            <col className="w-[19%] md:w-[17%]" />
             <col className="hidden md:table-column md:w-[9%]" />
-            <col className="w-[7%] md:w-[7%]" />
+            <col className="w-[6%] md:w-[7%]" />
             <col className="hidden md:table-column md:w-[7%]" />
-            <col className="w-[8.5%] md:w-[6%]" />
-            <col className="w-[20%] md:w-[14%]" />
-            <col className="hidden md:table-column md:w-[13%]" />
-            <col className="w-[10.83%] md:w-[7.66%]" />
-            <col className="w-[10.83%] md:w-[7.67%]" />
-            <col className="w-[10.84%] md:w-[7.67%]" />
+            <col className="w-[8%] md:w-[6%]" />
+            <col className="w-[14%] md:w-[14%]" />
+            <col className="w-[11.5%] md:w-[13%]" />
+            <col className="w-[11.5%] md:w-[7.66%]" />
+            <col className="w-[11.5%] md:w-[7.67%]" />
+            <col className="w-[11.5%] md:w-[7.67%]" />
           </colgroup>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -681,7 +697,7 @@ export function ServerTableSkeleton() {
           <TableBody>
             {Array.from({ length: 6 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={isDesktop ? 11 : 8} className="p-3">
+                <TableCell colSpan={isDesktop ? 11 : 9} className="p-3">
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
               </TableRow>
