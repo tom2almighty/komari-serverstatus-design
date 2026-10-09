@@ -1,7 +1,7 @@
 // Gates the built theme.zip against the limits the hub enforces at install time
 // (32 MiB package, 64 MiB extracted, 8 MiB per file, 2000 entries) and against
 // the two strings the hub rewrites to publish the operator's own title and
-// description. Run after `bun run build`; the release workflow runs it too, so a
+// description. Run after `pnpm run build`; the release workflow runs it too, so a
 // tag cannot publish a package the market would reject.
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
@@ -14,7 +14,7 @@ const PLACEHOLDERS = ["<title>Komari Monitor</title>", "A simple server monitor 
 
 const zipPath = path.join(process.cwd(), "theme.zip")
 if (!fs.existsSync(zipPath)) {
-  console.error("theme.zip not found. Run `bun run build` first.")
+  console.error("theme.zip not found. Run `pnpm run build` first.")
   process.exit(1)
 }
 

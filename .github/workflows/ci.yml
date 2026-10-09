@@ -27,21 +27,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
+      - uses: pnpm/action-setup@v6
 
-      - run: bun install --frozen-lockfile
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: bun run lint
+        run: pnpm run lint
 
-      # tsc -b is the first half of `bun run build`; it is the type check.
+      # tsc -b is the first half of `pnpm run build`; it is the type check.
       - name: Build
-        run: bun run build
+        run: pnpm run build
 
       - name: Verify the theme package
-        run: bun run verify
+        run: pnpm run verify
 
       - name: Upload theme.zip
         uses: actions/upload-artifact@v7

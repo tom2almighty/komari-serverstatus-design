@@ -3,12 +3,12 @@
   "private": true,
   "version": "0.0.2",
   "type": "module",
-  "packageManager": "bun@1.4.2",
+  "packageManager": "pnpm@12.9.1",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && bun scripts/pack.mjs",
+    "build": "tsc -b && vite build && node scripts/pack.mjs",
     "lint": "oxlint",
-    "verify": "bun scripts/verify-package.mjs",
+    "verify": "node scripts/verify-package.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -65,9 +65,9 @@ theme.zip
 在提交代码并打标签前，必须依次执行静态检查、构建与完整打包校验：
 
 ```bash
-bun run lint      # 检查代码静态规范，必须为 0 error 0 warning
-bun run build     # 执行类型检查、前端编译并自动运行 scripts/pack.mjs 生成 theme.zip
-bun run verify    # 严格校验 theme.zip 的体积限制、占位符完整性与 SHA-256 签名
+pnpm run lint     # 检查代码静态规范，必须为 0 error 0 warning
+pnpm run build    # 执行类型检查、前端编译并自动运行 scripts/pack.mjs 生成 theme.zip
+pnpm run verify   # 严格校验 theme.zip 的体积限制、占位符完整性与 SHA-256 签名
 ```
 
 ### 2. GitHub Release 发布
@@ -80,8 +80,8 @@ bun run verify    # 严格校验 theme.zip 的体积限制、占位符完整性�
    ```
 3. GitHub Actions 触发 `release.yml` 工作流：
    - 校验 Tag 名字与 `komari-theme.json` 中的 `version` 字段是否严格一致；
-   - 自动执行 `bun run build` 生成 `theme.zip`；
-   - 运行 `bun run verify` 完成安全边界检测；
+   - 自动执行 `pnpm run build` 生成 `theme.zip`；
+   - 运行 `pnpm run verify` 完成安全边界检测；
    - 调用 GitHub CLI 创建 Release，上传资产 `theme.zip` 并在 Release 说明中附带 SHA-256 校验和。
 
 ### 3. 主题市场同步
