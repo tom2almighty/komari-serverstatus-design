@@ -96,64 +96,37 @@ function TrafficCell({ node }: { node: Node }) {
   const limit = node.traffic_limit
   const hasQuota = limit > 0
 
+  // 与 CPU/内存/硬盘同一种形式：数字直接叠在进度条上；无配额时显示已用流量
   return (
-    <>
-      {/* 小屏：宽度有限，复用 CPU/内存/硬盘的进度条；无配额时只显示已用流量 */}
-      <div className="md:hidden">
-        <ProgressBar
-          value={hasQuota ? percent(total, limit) : null}
-          online={node.online}
-          title={hasQuota ? pair(total, limit) : compact(total)}
-          label={hasQuota ? undefined : compact(total)}
-        />
-      </div>
-
-      {/* 宽屏：空间充足，展示 已用/配额 与百分比的完整文本 */}
-      <div className="hidden md:flex flex-col items-center justify-center gap-0.5 leading-none text-xs">
-        {hasQuota ? (
-          <>
-            <span className="tnum font-medium text-foreground">
-              {compact(total)}/{compact(limit)}
-            </span>
-            <span className="tnum text-muted-foreground text-2xs">
-              ({percent(total, limit).toFixed(0)}%)
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="tnum font-medium text-foreground">
-              {compact(m.month_rx)} | {compact(m.month_tx)}
-            </span>
-            <span className="tnum text-muted-foreground text-2xs">
-              {compact(total)}
-            </span>
-          </>
-        )}
-      </div>
-    </>
+    <ProgressBar
+      value={hasQuota ? percent(total, limit) : null}
+      online={node.online}
+      title={hasQuota ? pair(total, limit) : compact(total)}
+      label={hasQuota ? undefined : compact(total)}
+    />
   )
 }
 
 
 /**
  * Strict column percentage definitions that sum to 100% on both mobile (9 columns) and desktop (11 columns).
- * Mobile hides: os, uptime (2 columns).
- * Mobile retains: status(7%), name(19%), location(6%), load(8%), speed(14%), traffic(11.5%), cpu(11.5%), mem(11.5%), disk(11.5%) = 100%
+ * Traffic sits last on both breakpoints; mobile hides os and uptime (2 columns).
+ * Mobile retains: status(7%), name(19%), location(6%), load(8%), speed(14%), cpu(11.5%), mem(11.5%), disk(11.5%), traffic(11.5%) = 100%
  * Desktop displays all 11:
- * status(4%), name(17%), os(9%), location(7%), uptime(7%), load(6%), speed(14%), traffic(13%), cpu(7.66%), mem(7.67%), disk(7.67%) = 100%
+ * status(4%), name(22%), os(9%), location(7%), uptime(7%), load(6%), speed(14%), cpu(7.66%), mem(7.67%), disk(7.67%), traffic(8%) = 100%
  */
 const COL_CLASSES = {
   status: "w-[7%] md:w-[4%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  name: "w-[19%] md:w-[17%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
+  name: "w-[19%] md:w-[22%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
   os: "hidden md:table-cell md:w-[9%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   location: "w-[6%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   uptime: "hidden md:table-cell md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   load: "w-[8%] md:w-[6%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   speed: "w-[14%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  traffic: "w-[11.5%] md:w-[13%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   cpu: "w-[11.5%] md:w-[7.66%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   mem: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   disk: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  traffic: "w-[11.5%] md:w-[8%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
 }
 
 type SortField = "name" | "os" | "location" | "uptime" | "load" | "speed" | "traffic" | "cpu" | "mem" | "disk"
@@ -291,12 +264,7 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
           <SpeedCell m={m} online={node.online} />
         </TableCell>
 
-        {/* 8. 流量 (小屏隐藏) */}
-        <TableCell className={COL_CLASSES.traffic}>
-          <TrafficCell node={node} />
-        </TableCell>
-
-        {/* 9. CPU 进度条 */}
+        {/* 8. CPU 进度条 */}
         <TableCell className={COL_CLASSES.cpu}>
           <ProgressBar
             value={cpu}
@@ -305,7 +273,7 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
           />
         </TableCell>
 
-        {/* 10. 内存 进度条 */}
+        {/* 9. 内存 进度条 */}
         <TableCell className={COL_CLASSES.mem}>
           <ProgressBar
             value={mem}
@@ -314,13 +282,18 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
           />
         </TableCell>
 
-        {/* 11. 硬盘 进度条 */}
+        {/* 10. 硬盘 进度条 */}
         <TableCell className={COL_CLASSES.disk}>
           <ProgressBar
             value={disk}
             online={node.online}
             title={m ? pair(m.disk_used, m.disk_total) : undefined}
           />
+        </TableCell>
+
+        {/* 11. 流量 进度条 */}
+        <TableCell className={COL_CLASSES.traffic}>
+          <TrafficCell node={node} />
         </TableCell>
       </TableRow>
 
@@ -513,16 +486,16 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
             {/* 使用 colgroup 锁死列宽百分比模型 */}
             <colgroup>
               <col className="w-[7%] md:w-[4%]" />
-              <col className="w-[19%] md:w-[17%]" />
+              <col className="w-[19%] md:w-[22%]" />
               <col className="hidden md:table-column md:w-[9%]" />
               <col className="w-[6%] md:w-[7%]" />
               <col className="hidden md:table-column md:w-[7%]" />
               <col className="w-[8%] md:w-[6%]" />
               <col className="w-[14%] md:w-[14%]" />
-              <col className="w-[11.5%] md:w-[13%]" />
               <col className="w-[11.5%] md:w-[7.66%]" />
               <col className="w-[11.5%] md:w-[7.67%]" />
               <col className="w-[11.5%] md:w-[7.67%]" />
+              <col className="w-[11.5%] md:w-[8%]" />
             </colgroup>
 
             <TableHeader>
@@ -581,14 +554,6 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
                   onSort={handleSort}
                 />
                 <SortableHead
-                  className={COL_CLASSES.traffic}
-                  label={t("colTrafficShort")}
-                  field="traffic"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
                   className={COL_CLASSES.cpu}
                   label={t("colCpu")}
                   field="cpu"
@@ -608,6 +573,14 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
                   className={COL_CLASSES.disk}
                   label={t("colDisk")}
                   field="disk"
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableHead
+                  className={COL_CLASSES.traffic}
+                  label={t("colTrafficShort")}
+                  field="traffic"
                   sortField={sortField}
                   sortOrder={sortOrder}
                   onSort={handleSort}
@@ -646,16 +619,16 @@ export function ServerTableSkeleton() {
         >
           <colgroup>
             <col className="w-[7%] md:w-[4%]" />
-            <col className="w-[19%] md:w-[17%]" />
+            <col className="w-[19%] md:w-[22%]" />
             <col className="hidden md:table-column md:w-[9%]" />
             <col className="w-[6%] md:w-[7%]" />
             <col className="hidden md:table-column md:w-[7%]" />
             <col className="w-[8%] md:w-[6%]" />
             <col className="w-[14%] md:w-[14%]" />
-            <col className="w-[11.5%] md:w-[13%]" />
             <col className="w-[11.5%] md:w-[7.66%]" />
             <col className="w-[11.5%] md:w-[7.67%]" />
             <col className="w-[11.5%] md:w-[7.67%]" />
+            <col className="w-[11.5%] md:w-[8%]" />
           </colgroup>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -680,9 +653,6 @@ export function ServerTableSkeleton() {
               <TableHead className={COL_CLASSES.speed}>
                 <Skeleton className="mx-auto h-3.5 w-14" />
               </TableHead>
-              <TableHead className={COL_CLASSES.traffic}>
-                <Skeleton className="mx-auto h-3.5 w-14" />
-              </TableHead>
               <TableHead className={COL_CLASSES.cpu}>
                 <Skeleton className="mx-auto h-3.5 w-10" />
               </TableHead>
@@ -691,6 +661,9 @@ export function ServerTableSkeleton() {
               </TableHead>
               <TableHead className={COL_CLASSES.disk}>
                 <Skeleton className="mx-auto h-3.5 w-10" />
+              </TableHead>
+              <TableHead className={COL_CLASSES.traffic}>
+                <Skeleton className="mx-auto h-3.5 w-14" />
               </TableHead>
             </TableRow>
           </TableHeader>
