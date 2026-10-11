@@ -1,5 +1,5 @@
-import { useState } from "react"
 import { Search, X } from "lucide-react"
+import { useState } from "react"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,9 @@ export function NodePicker({ nodes, selected }: { nodes: Node[]; selected: strin
   const [query, setQuery] = useState("")
   const q = query.trim().toLowerCase()
   const shown = q
-    ? nodes.filter((n) => `${n.name} ${n.country} ${n.os} ${n.group ?? ""}`.toLowerCase().includes(q))
+    ? nodes.filter((n) =>
+        `${n.name} ${n.country} ${n.os} ${n.group ?? ""}`.toLowerCase().includes(q),
+      )
     : nodes
 
   return (

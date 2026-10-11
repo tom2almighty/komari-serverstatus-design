@@ -16,10 +16,30 @@ const FLAGS: Record<string, string> = Object.fromEntries(
 
 /** Alpha-3 codes an operator may have typed instead of the alpha-2 flag-icons uses. */
 const ALPHA3: Record<string, string> = {
-  usa: "us", chn: "cn", jpn: "jp", hkg: "hk", twn: "tw", sgp: "sg",
-  gbr: "gb", deu: "de", fra: "fr", kor: "kr", can: "ca", aus: "au",
-  rus: "ru", nld: "nl", ind: "in", bra: "br", ita: "it", esp: "es",
-  swe: "se", che: "ch", pol: "pl", fin: "fi", nor: "no", dnk: "dk",
+  usa: "us",
+  chn: "cn",
+  jpn: "jp",
+  hkg: "hk",
+  twn: "tw",
+  sgp: "sg",
+  gbr: "gb",
+  deu: "de",
+  fra: "fr",
+  kor: "kr",
+  can: "ca",
+  aus: "au",
+  rus: "ru",
+  nld: "nl",
+  ind: "in",
+  bra: "br",
+  ita: "it",
+  esp: "es",
+  swe: "se",
+  che: "ch",
+  pol: "pl",
+  fin: "fi",
+  nor: "no",
+  dnk: "dk",
 }
 
 const REGIONAL_A = 0x1f1e6
@@ -41,5 +61,5 @@ export function flagUrl(region: string): string | null {
 
   const code = trimmed.toLowerCase()
   const iso = ALPHA3[code] ?? code
-  return /^[a-z]{2}$/.test(iso) ? FLAGS[iso] ?? null : null
+  return /^[a-z]{2}$/.test(iso) ? (FLAGS[iso] ?? null) : null
 }

@@ -1,12 +1,19 @@
-import { useMemo, useState, useSyncExternalStore } from "react"
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Search, X } from "lucide-react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { RowDetails } from "@/components/RowDetails"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { Metrics, Node } from "@/lib/api"
 import { compact, duration, pair, percent, shortDistro } from "@/lib/format"
 import { useI18n } from "@/lib/i18n"
@@ -107,7 +114,6 @@ function TrafficCell({ node }: { node: Node }) {
   )
 }
 
-
 /**
  * Strict column percentage definitions that sum to 100% on both mobile (9 columns) and desktop (11 columns).
  * Traffic sits last on both breakpoints; mobile hides os and uptime (2 columns).
@@ -119,17 +125,31 @@ const COL_CLASSES = {
   status: "w-[7%] md:w-[4%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   name: "w-[19%] md:w-[22%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
   os: "hidden md:table-cell md:w-[9%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  location: "w-[6%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  uptime: "hidden md:table-cell md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  location:
+    "w-[6%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  uptime:
+    "hidden md:table-cell md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   load: "w-[8%] md:w-[6%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  speed: "w-[14%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  speed:
+    "w-[14%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   cpu: "w-[11.5%] md:w-[7.66%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   mem: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
   disk: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  traffic: "w-[11.5%] md:w-[8%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  traffic:
+    "w-[11.5%] md:w-[8%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
 }
 
-type SortField = "name" | "os" | "location" | "uptime" | "load" | "speed" | "traffic" | "cpu" | "mem" | "disk"
+type SortField =
+  | "name"
+  | "os"
+  | "location"
+  | "uptime"
+  | "load"
+  | "speed"
+  | "traffic"
+  | "cpu"
+  | "mem"
+  | "disk"
 type SortOrder = "asc" | "desc"
 
 function sortNodes(nodes: Node[], field: SortField | null, order: SortOrder): Node[] {
@@ -205,7 +225,9 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
       <TableRow
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen((o) => !o))}
+        onKeyDown={(e) =>
+          (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen((o) => !o))
+        }
         className={cn(
           "km-ui-table-row cursor-pointer select-none transition-colors hover:bg-muted/50",
           open && "bg-muted/30 hover:bg-muted/40",
@@ -250,7 +272,9 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
           </div>
         </TableCell>
         {/* 5. 运行时间 (小屏隐藏) */}
-        <TableCell className={cn(COL_CLASSES.uptime, "tnum text-xs font-medium text-muted-foreground")}>
+        <TableCell
+          className={cn(COL_CLASSES.uptime, "tnum text-xs font-medium text-muted-foreground")}
+        >
           {m ? duration(m.uptime, t("daysUnit")) : "—"}
         </TableCell>
 
@@ -399,7 +423,9 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
     const q = filter.trim().toLowerCase()
     let list = nodes
     if (selectedGroup !== "ALL") {
-      list = list.filter((n) => (selectedGroup === "UNGROUPED" ? !n.group : n.group === selectedGroup))
+      list = list.filter((n) =>
+        selectedGroup === "UNGROUPED" ? !n.group : n.group === selectedGroup,
+      )
     }
 
     if (q) {
@@ -408,7 +434,7 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
           n.name.toLowerCase().includes(q) ||
           n.country.toLowerCase().includes(q) ||
           n.os.toLowerCase().includes(q) ||
-          (n.group && n.group.toLowerCase().includes(q)),
+          Boolean(n.group?.toLowerCase().includes(q)),
       )
     }
 
@@ -417,7 +443,11 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
 
   const tabs = [
     { value: "ALL", label: t("allGroups"), count: nodes.length },
-    ...groups.map((g) => ({ value: g, label: g, count: nodes.filter((n) => n.group === g).length })),
+    ...groups.map((g) => ({
+      value: g,
+      label: g,
+      count: nodes.filter((n) => n.group === g).length,
+    })),
     ...(ungrouped > 0 ? [{ value: "UNGROUPED", label: t("ungrouped"), count: ungrouped }] : []),
   ]
 

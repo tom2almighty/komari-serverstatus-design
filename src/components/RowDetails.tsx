@@ -1,15 +1,21 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { ChartLine, ExternalLink, Infinity as InfinityIcon } from "lucide-react"
-
-import { Dot, OsIcon } from "@/components/NodeMarks"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { Latency } from "@/components/NodeDetail"
+import { Dot, OsIcon } from "@/components/NodeMarks"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Segmented } from "@/components/ui/segmented"
 import type { Node } from "@/lib/api"
 import {
-  bytes, cpuName, expiry, money, osName, pair, percent,
-  uptime, virtName,
+  bytes,
+  cpuName,
+  expiry,
+  money,
+  osName,
+  pair,
+  percent,
+  uptime,
+  virtName,
 } from "@/lib/format"
 import { fetchHistory, latencyWindow } from "@/lib/history"
 import { useI18n } from "@/lib/i18n"
@@ -17,7 +23,15 @@ import { knownPing, recordPing } from "@/lib/pings"
 import { Link } from "@/lib/route"
 import { cn } from "@/lib/utils"
 
-function Block({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
+function Block({
+  title,
+  aside,
+  children,
+}: {
+  title: string
+  aside?: ReactNode
+  children: ReactNode
+}) {
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-lg border bg-card p-3 sm:p-3.5 text-card-foreground shadow-xs">
       <div className="mb-2.5 flex items-center justify-between gap-2 border-b pb-2 text-xs font-semibold">
@@ -29,11 +43,23 @@ function Block({ title, aside, children }: { title: string; aside?: ReactNode; c
   )
 }
 
-function Line({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+function Line({
+  label,
+  className,
+  children,
+}: {
+  label: string
+  className?: string
+  children: ReactNode
+}) {
   return (
     <div className="flex min-w-0 max-w-full items-baseline justify-between gap-2 text-xs">
       <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span className={cn("tnum min-w-0 truncate text-right font-medium text-foreground", className)}>{children}</span>
+      <span
+        className={cn("tnum min-w-0 truncate text-right font-medium text-foreground", className)}
+      >
+        {children}
+      </span>
     </div>
   )
 }
@@ -41,7 +67,10 @@ function Line({ label, className, children }: { label: string; className?: strin
 function Overview({ node }: { node: Node }) {
   const { t } = useI18n()
   const m = node.online ? node.metrics : null
-  const away = useMemo(() => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0), [node.last_seen])
+  const away = useMemo(
+    () => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0),
+    [node.last_seen],
+  )
   const { days, date } = expiry(node.expires_at)
   const used = m ? m.month_rx + m.month_tx : 0
   const limit = node.traffic_limit
@@ -54,7 +83,11 @@ function Overview({ node }: { node: Node }) {
         aside={
           <div className="flex items-center gap-1.5 shrink-0">
             <Dot node={node} />
-            {node.group && <Badge variant="secondary" className="text-2xs py-0 px-1.5 truncate max-w-24">{node.group}</Badge>}
+            {node.group && (
+              <Badge variant="secondary" className="text-2xs py-0 px-1.5 truncate max-w-24">
+                {node.group}
+              </Badge>
+            )}
           </div>
         }
       >
@@ -93,15 +126,21 @@ function Overview({ node }: { node: Node }) {
       >
         {m && <Line label={t("colCpu")}>{m.cpu.toFixed(1)}%</Line>}
         <Line label={t("colMem")}>
-          {m ? `${pair(m.mem_used, m.mem_total)} (${percent(m.mem_used, m.mem_total).toFixed(0)}%)` : bytes(node.mem_total)}
+          {m
+            ? `${pair(m.mem_used, m.mem_total)} (${percent(m.mem_used, m.mem_total).toFixed(0)}%)`
+            : bytes(node.mem_total)}
         </Line>
         {node.swap_total > 0 && (
           <Line label="Swap">
-            {m ? `${pair(m.swap_used, m.swap_total)} (${percent(m.swap_used, m.swap_total).toFixed(0)}%)` : bytes(node.swap_total)}
+            {m
+              ? `${pair(m.swap_used, m.swap_total)} (${percent(m.swap_used, m.swap_total).toFixed(0)}%)`
+              : bytes(node.swap_total)}
           </Line>
         )}
         <Line label={t("colDisk")}>
-          {m ? `${pair(m.disk_used, m.disk_total)} (${percent(m.disk_used, m.disk_total).toFixed(0)}%)` : bytes(node.disk_total)}
+          {m
+            ? `${pair(m.disk_used, m.disk_total)} (${percent(m.disk_used, m.disk_total).toFixed(0)}%)`
+            : bytes(node.disk_total)}
         </Line>
         {m && <Line label={t("colLoad")}>{m.load.map((n) => n.toFixed(2)).join(" / ")}</Line>}
       </Block>
@@ -120,11 +159,7 @@ function Overview({ node }: { node: Node }) {
         </Line>
         {limit > 0 && (
           <div className="py-0.5">
-            <Progress
-              value={percent(used, limit)}
-              title={pair(used, limit)}
-              className="h-1.5"
-            />
+            <Progress value={percent(used, limit)} title={pair(used, limit)} className="h-1.5" />
           </div>
         )}
         {m && (
@@ -141,9 +176,7 @@ function Overview({ node }: { node: Node }) {
           </Line>
         )}
         {m && (
-          <Line label={t("trafficTotal")}>
-            {`↓ ${bytes(m.total_rx)} · ↑ ${bytes(m.total_tx)}`}
-          </Line>
+          <Line label={t("trafficTotal")}>{`↓ ${bytes(m.total_rx)} · ↑ ${bytes(m.total_tx)}`}</Line>
         )}
         {m && <Line label={t("tcpUdp")}>{`TCP: ${m.tcp} · UDP: ${m.udp}`}</Line>}
       </Block>
@@ -151,7 +184,9 @@ function Overview({ node }: { node: Node }) {
       {/* 4. 账期与配置 */}
       <Block title={t("detailBilling")}>
         <Line label={t("price")}>
-          {node.price > 0 ? `${money(node.price, node.currency)} / ${node.billing_cycle}${t("daysUnit")}` : "Free"}
+          {node.price > 0
+            ? `${money(node.price, node.currency)} / ${node.billing_cycle}${t("daysUnit")}`
+            : "Free"}
         </Line>
         <Line label={t("colExpiry")}>
           {days === null ? (
@@ -162,11 +197,19 @@ function Overview({ node }: { node: Node }) {
             <span className="inline-flex items-center gap-1.5">
               <span>{date}</span>
               {days < 0 ? (
-                <Badge variant="destructive" className="px-1 py-0 text-2xs">{t("expired")}</Badge>
+                <Badge variant="destructive" className="px-1 py-0 text-2xs">
+                  {t("expired")}
+                </Badge>
               ) : days <= 7 ? (
-                <Badge variant="warning" className="px-1 py-0 text-2xs">{days}{t("daysUnit")}</Badge>
+                <Badge variant="warning" className="px-1 py-0 text-2xs">
+                  {days}
+                  {t("daysUnit")}
+                </Badge>
               ) : (
-                <span className="text-muted-foreground">({days}{t("daysUnit")})</span>
+                <span className="text-muted-foreground">
+                  ({days}
+                  {t("daysUnit")})
+                </span>
               )}
             </span>
           )}

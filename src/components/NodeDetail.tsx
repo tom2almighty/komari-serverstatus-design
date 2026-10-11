@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { ArrowLeft } from "lucide-react"
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import {
-  Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
@@ -13,10 +21,29 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Toggle } from "@/components/ui/toggle"
 import type { Node } from "@/lib/api"
 import {
-  axisBytes, axisTop, bytes, clockFor, compact, despike, ewma, quarters, rate, percent, timeTicks, uptime,
+  axisBytes,
+  axisTop,
+  bytes,
+  clockFor,
+  compact,
+  despike,
+  ewma,
+  percent,
+  quarters,
+  rate,
+  timeTicks,
+  uptime,
 } from "@/lib/format"
-import { fetchHistory, inRanges, LATENCY_HOURS, RANGES, type History, type Point, type Series } from "@/lib/history"
-import { useI18n, type TranslationKey } from "@/lib/i18n"
+import {
+  fetchHistory,
+  type History,
+  inRanges,
+  LATENCY_HOURS,
+  type Point,
+  RANGES,
+  type Series,
+} from "@/lib/history"
+import { type TranslationKey, useI18n } from "@/lib/i18n"
 import { knownPing, recordPing } from "@/lib/pings"
 import { usePref } from "@/lib/prefs"
 import { Link } from "@/lib/route"
@@ -69,6 +96,7 @@ function useHistory(uuid: string, hours: number, series: Series) {
 
   useEffect(() => {
     let active = true
+    void attempt
 
     fetchHistory(uuid, hours, series)
       .then((res) => {
@@ -80,7 +108,14 @@ function useHistory(uuid: string, hours: number, series: Series) {
       })
       .catch((err: Error) => {
         if (!active) return
-        setState({ uuid, hours, series, data: null, failed: err.message || "Failed to load", loading: false })
+        setState({
+          uuid,
+          hours,
+          series,
+          data: null,
+          failed: err.message || "Failed to load",
+          loading: false,
+        })
       })
 
     return () => {
@@ -112,8 +147,17 @@ function timeAxis(rows: { ts: number }[], hours: number) {
 }
 
 export function Latency({
-  uuid, hours: fixed, className, onKnown,
-}: { uuid: string; hours?: number; card?: boolean; className?: string; onKnown?: (has: boolean) => void }) {
+  uuid,
+  hours: fixed,
+  className,
+  onKnown,
+}: {
+  uuid: string
+  hours?: number
+  card?: boolean
+  className?: string
+  onKnown?: (has: boolean) => void
+}) {
   const { t } = useI18n()
   const [picked, setPicked] = usePref<number>("latency-hours", LATENCY_HOURS)
   const hours = fixed ?? (inRanges(picked) ? picked : LATENCY_HOURS)
@@ -158,13 +202,18 @@ export function Latency({
       if (p.latency !== null) {
         const cur = row[k]
         // The hub reports latency as a float; the chart is an integer display.
-        row[k] = cur !== undefined && cur !== null ? Math.round((cur + p.latency) / 2) : Math.round(p.latency)
+        row[k] =
+          cur !== undefined && cur !== null
+            ? Math.round((cur + p.latency) / 2)
+            : Math.round(p.latency)
       } else if (row[k] === undefined) {
         row[k] = null
       }
     }
 
-    const rows = Array.from(buckets.values()).sort((a, b) => a.ts - b.ts).map((r) => ({ ...r }))
+    const rows = Array.from(buckets.values())
+      .sort((a, b) => a.ts - b.ts)
+      .map((r) => ({ ...r }))
     if (!despiked && !smoothed) return rows
 
     // Process filters per probe
@@ -173,7 +222,12 @@ export function Latency({
       const rawVals = rows.map((r) => r[key] ?? null)
       let proc = rawVals
       if (despiked) proc = despike(proc)
-      if (smoothed) proc = ewma(proc, rows.map((r) => r.ts), 600 * 1000)
+      if (smoothed)
+        proc = ewma(
+          proc,
+          rows.map((r) => r.ts),
+          600 * 1000,
+        )
       for (let i = 0; i < rows.length; i++) {
         // despike and ewma both return floats; round back to the integer display.
         const v = proc[i]
@@ -189,7 +243,10 @@ export function Latency({
   if (failed) {
     return (
       <div className="py-8 text-center text-xs text-destructive">
-        {failed} <button onClick={retry} className="ml-1 underline cursor-pointer">Retry</button>
+        {failed}{" "}
+        <button onClick={retry} className="ml-1 underline cursor-pointer">
+          Retry
+        </button>
       </div>
     )
   }
@@ -271,7 +328,12 @@ export function Latency({
                             )}
                             style={{ backgroundColor: color }}
                           />
-                          <span className={cn("truncate max-w-44", isHidden && "line-through opacity-70")}>
+                          <span
+                            className={cn(
+                              "truncate max-w-44",
+                              isHidden && "line-through opacity-70",
+                            )}
+                          >
                             {name}
                           </span>
                         </button>
@@ -309,7 +371,10 @@ export function NodeDetail({ node }: { node: Node }) {
   const { data, failed, loading, retry } = useHistory(node.uuid, hours, "metrics")
 
   const m = node.metrics
-  const away = useMemo(() => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0), [node.last_seen])
+  const away = useMemo(
+    () => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0),
+    [node.last_seen],
+  )
 
   const metricRows = useMemo(() => {
     const raw = data?.metrics ?? []
@@ -326,8 +391,17 @@ export function NodeDetail({ node }: { node: Node }) {
     const max = (pick: (pt: Point) => number) =>
       metricRows.reduce((hi, pt) => Math.max(hi, pick(pt)), 0)
     return {
-      cpu: axisTop(max((pt) => pt.cpu), 4, 10, 100),
-      rate: axisTop(max((pt) => Math.max(pt.net_rx, pt.net_tx)), 1024, 1024),
+      cpu: axisTop(
+        max((pt) => pt.cpu),
+        4,
+        10,
+        100,
+      ),
+      rate: axisTop(
+        max((pt) => Math.max(pt.net_rx, pt.net_tx)),
+        1024,
+        1024,
+      ),
     }
   }, [metricRows])
 
@@ -341,8 +415,20 @@ export function NodeDetail({ node }: { node: Node }) {
           <Flag code={node.country} className="text-sm" />
           <h2 className="truncate text-lg font-bold tracking-tight text-foreground">{node.name}</h2>
           <OsIcon os={node.os} className="size-4 opacity-75" />
-          <Badge variant={node.online ? "success" : (node.cpu_cores > 0 || node.mem_total > 0) ? "destructive" : "secondary"}>
-            {node.online ? `${t("statusOnline")} ${m ? uptime(m.uptime) : ""}` : (node.cpu_cores > 0 || node.mem_total > 0) ? `${t("statusOffline")} ${away >= 60 ? uptime(away) : ""}` : t("statusOffline")}
+          <Badge
+            variant={
+              node.online
+                ? "success"
+                : node.cpu_cores > 0 || node.mem_total > 0
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
+            {node.online
+              ? `${t("statusOnline")} ${m ? uptime(m.uptime) : ""}`
+              : node.cpu_cores > 0 || node.mem_total > 0
+                ? `${t("statusOffline")} ${away >= 60 ? uptime(away) : ""}`
+                : t("statusOffline")}
           </Badge>
         </div>
 
@@ -363,11 +449,15 @@ export function NodeDetail({ node }: { node: Node }) {
           </div>
           <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colMem")}</span>
-            <p className="tnum font-bold text-foreground mt-0.5">{percent(m.mem_used, m.mem_total).toFixed(1)}%</p>
+            <p className="tnum font-bold text-foreground mt-0.5">
+              {percent(m.mem_used, m.mem_total).toFixed(1)}%
+            </p>
           </div>
           <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colSpeed")}</span>
-            <p className="tnum font-bold text-foreground mt-0.5">↓ {compact(m.net_rx)}/s · ↑ {compact(m.net_tx)}/s</p>
+            <p className="tnum font-bold text-foreground mt-0.5">
+              ↓ {compact(m.net_rx)}/s · ↑ {compact(m.net_tx)}/s
+            </p>
           </div>
           <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colLoad")}</span>
@@ -376,7 +466,9 @@ export function NodeDetail({ node }: { node: Node }) {
         </div>
       )}
       {node.remark && (
-        <p className="rounded-lg border border-border/80 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{node.remark}</p>
+        <p className="rounded-lg border border-border/80 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+          {node.remark}
+        </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-4">
@@ -399,7 +491,10 @@ export function NodeDetail({ node }: { node: Node }) {
         <Skeleton className="h-64 w-full" />
       ) : failed ? (
         <div className="py-8 text-center text-xs text-destructive">
-          {failed} <button onClick={retry} className="ml-1 underline cursor-pointer">Retry</button>
+          {failed}{" "}
+          <button onClick={retry} className="ml-1 underline cursor-pointer">
+            Retry
+          </button>
         </div>
       ) : metricRows.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{t("noChartData")}</p>
@@ -411,9 +506,25 @@ export function NodeDetail({ node }: { node: Node }) {
                 <AreaChart data={metricRows}>
                   <CartesianGrid className="stroke-border" vertical={false} />
                   <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis domain={[0, tops.cpu]} ticks={quarters(tops.cpu)} unit="%" width={Y_WIDTH} {...AXIS} />
-                  <Tooltip labelFormatter={label} formatter={(v) => [`${Number(v).toFixed(1)}%`, "CPU"]} contentStyle={TIP} />
-                  <Area dataKey="cpu" stroke="var(--color-chart-1)" fill="var(--color-chart-1)" fillOpacity={0.15} {...SERIES} />
+                  <YAxis
+                    domain={[0, tops.cpu]}
+                    ticks={quarters(tops.cpu)}
+                    unit="%"
+                    width={Y_WIDTH}
+                    {...AXIS}
+                  />
+                  <Tooltip
+                    labelFormatter={label}
+                    formatter={(v) => [`${Number(v).toFixed(1)}%`, "CPU"]}
+                    contentStyle={TIP}
+                  />
+                  <Area
+                    dataKey="cpu"
+                    stroke="var(--color-chart-1)"
+                    fill="var(--color-chart-1)"
+                    fillOpacity={0.15}
+                    {...SERIES}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </Panel>
@@ -423,9 +534,26 @@ export function NodeDetail({ node }: { node: Node }) {
                 <AreaChart data={metricRows}>
                   <CartesianGrid className="stroke-border" vertical={false} />
                   <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis domain={[0, node.mem_total]} ticks={quarters(node.mem_total)} tickFormatter={axisBytes} width={Y_WIDTH} {...AXIS} />
-                  <Tooltip labelFormatter={label} formatter={(v) => bytes(Number(v))} contentStyle={TIP} />
-                  <Area dataKey="mem_used" name={t("colMem")} stroke="var(--color-chart-4)" fill="var(--color-chart-4)" fillOpacity={0.15} {...SERIES} />
+                  <YAxis
+                    domain={[0, node.mem_total]}
+                    ticks={quarters(node.mem_total)}
+                    tickFormatter={axisBytes}
+                    width={Y_WIDTH}
+                    {...AXIS}
+                  />
+                  <Tooltip
+                    labelFormatter={label}
+                    formatter={(v) => bytes(Number(v))}
+                    contentStyle={TIP}
+                  />
+                  <Area
+                    dataKey="mem_used"
+                    name={t("colMem")}
+                    stroke="var(--color-chart-4)"
+                    fill="var(--color-chart-4)"
+                    fillOpacity={0.15}
+                    {...SERIES}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </Panel>
@@ -443,8 +571,19 @@ export function NodeDetail({ node }: { node: Node }) {
                 <LineChart data={metricRows}>
                   <CartesianGrid className="stroke-border" vertical={false} />
                   <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis domain={[0, tops.rate]} ticks={quarters(tops.rate)} tickFormatter={axisBytes} unit="/s" width={Y_WIDTH} {...AXIS} />
-                  <Tooltip labelFormatter={label} formatter={(v) => rate(Number(v))} contentStyle={TIP} />
+                  <YAxis
+                    domain={[0, tops.rate]}
+                    ticks={quarters(tops.rate)}
+                    tickFormatter={axisBytes}
+                    unit="/s"
+                    width={Y_WIDTH}
+                    {...AXIS}
+                  />
+                  <Tooltip
+                    labelFormatter={label}
+                    formatter={(v) => rate(Number(v))}
+                    contentStyle={TIP}
+                  />
                   <Line dataKey="net_rx" name="RX" stroke="var(--color-chart-2)" {...SERIES} />
                   <Line dataKey="net_tx" name="TX" stroke="var(--color-chart-3)" {...SERIES} />
                 </LineChart>
@@ -456,9 +595,26 @@ export function NodeDetail({ node }: { node: Node }) {
                 <AreaChart data={metricRows}>
                   <CartesianGrid className="stroke-border" vertical={false} />
                   <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis domain={[0, node.disk_total]} ticks={quarters(node.disk_total)} tickFormatter={axisBytes} width={Y_WIDTH} {...AXIS} />
-                  <Tooltip labelFormatter={label} formatter={(v) => bytes(Number(v))} contentStyle={TIP} />
-                  <Area dataKey="disk_used" name={t("colDisk")} stroke="var(--color-chart-5)" fill="var(--color-chart-5)" fillOpacity={0.15} {...SERIES} />
+                  <YAxis
+                    domain={[0, node.disk_total]}
+                    ticks={quarters(node.disk_total)}
+                    tickFormatter={axisBytes}
+                    width={Y_WIDTH}
+                    {...AXIS}
+                  />
+                  <Tooltip
+                    labelFormatter={label}
+                    formatter={(v) => bytes(Number(v))}
+                    contentStyle={TIP}
+                  />
+                  <Area
+                    dataKey="disk_used"
+                    name={t("colDisk")}
+                    stroke="var(--color-chart-5)"
+                    fill="var(--color-chart-5)"
+                    fillOpacity={0.15}
+                    {...SERIES}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </Panel>

@@ -9,8 +9,14 @@ import { cn } from "@/lib/utils"
  * reader has to know is applied.
  */
 export function Toggle({
-  pressed, onPressedChange, className, ...props
-}: Omit<ComponentProps<"button">, "onClick"> & { pressed: boolean; onPressedChange: (pressed: boolean) => void }) {
+  pressed,
+  onPressedChange,
+  className,
+  ...props
+}: Omit<ComponentProps<"button">, "onClick"> & {
+  pressed: boolean
+  onPressedChange: (pressed: boolean) => void
+}) {
   return (
     <button
       type="button"

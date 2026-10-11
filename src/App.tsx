@@ -1,6 +1,26 @@
-import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react"
-import { Activity, ChartLine, Check, Globe, Monitor, Moon, Palette, RotateCcw, Server, Settings, Sun } from "lucide-react"
-
+import {
+  Activity,
+  ChartLine,
+  Check,
+  Globe,
+  Monitor,
+  Moon,
+  Palette,
+  RotateCcw,
+  Server,
+  Settings,
+  Sun,
+} from "lucide-react"
+import {
+  type CSSProperties,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
+import { NodeDetail } from "@/components/NodeDetail"
 import { NodePicker } from "@/components/NodePicker"
 import { ServerTable, ServerTableSkeleton } from "@/components/ServerTable"
 import { Button } from "@/components/ui/button"
@@ -8,13 +28,18 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { SEGMENT, Segmented } from "@/components/ui/segmented"
 import { Skeleton } from "@/components/ui/skeleton"
-import { api, useNodes, type PublicSettings } from "@/lib/api"
+import { api, type PublicSettings, useNodes } from "@/lib/api"
 import { I18nProvider, useI18n } from "@/lib/i18n"
 import { Link, useAppRoute } from "@/lib/route"
-import { applyTheme, clampPageWidth, DEFAULT_RADIUS, PRIMARY_COLOR_PRESETS, RADIUS_PRESETS } from "@/lib/themes"
+import {
+  applyTheme,
+  clampPageWidth,
+  DEFAULT_RADIUS,
+  PRIMARY_COLOR_PRESETS,
+  RADIUS_PRESETS,
+} from "@/lib/themes"
 import { cn } from "@/lib/utils"
 
-import { NodeDetail } from "@/components/NodeDetail"
 const DARK_MEDIA = matchMedia("(prefers-color-scheme: dark)")
 type Mode = "light" | "dark" | "system"
 
@@ -68,10 +93,7 @@ function useTheme() {
   return { mode, dark, choose }
 }
 
-function useThemeCustomizer(
-  serverCustomPrimary = "",
-  serverCustomRadius = DEFAULT_RADIUS,
-) {
+function useThemeCustomizer(serverCustomPrimary = "", serverCustomRadius = DEFAULT_RADIUS) {
   const [primary, setPrimary] = useState<string>(() => {
     try {
       return localStorage.getItem("theme-primary") ?? serverCustomPrimary
@@ -154,7 +176,10 @@ function ThemeSettingsPopover({
         size="icon-sm"
         onClick={() => setOpen((o) => !o)}
         title={t("themeCustomizer")}
-        className={cn("text-muted-foreground hover:text-foreground cursor-pointer", open && "bg-accent text-foreground")}
+        className={cn(
+          "text-muted-foreground hover:text-foreground cursor-pointer",
+          open && "bg-accent text-foreground",
+        )}
       >
         <Palette className="size-4" />
       </Button>
@@ -181,10 +206,14 @@ function ThemeSettingsPopover({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{t("themePrimary")}</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("themePrimary")}
+              </label>
               <div className="flex items-center gap-1.5">
                 {PRIMARY_COLOR_PRESETS.map((p) => {
-                  const active = primary.toLowerCase() === p.value.toLowerCase() || (!primary && p.value === "#18181b")
+                  const active =
+                    primary.toLowerCase() === p.value.toLowerCase() ||
+                    (!primary && p.value === "#18181b")
                   return (
                     <button
                       key={p.name}
@@ -220,7 +249,9 @@ function ThemeSettingsPopover({
             </div>
 
             <div className="space-y-1.5 pt-2 border-t border-border/60">
-              <label className="text-xs font-medium text-muted-foreground">{t("themeRadius")}</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("themeRadius")}
+              </label>
               <div className="grid grid-cols-5 gap-1">
                 {RADIUS_PRESETS.map((r) => {
                   const active = (radius || DEFAULT_RADIUS) === r.value
@@ -310,14 +341,10 @@ function MainApp() {
   const announcement = String(publicInfo?.theme_settings?.announcement ?? "")
   const siteTitle = publicInfo?.sitename || t("siteTitle")
 
-  const {
-    primary,
-    setPrimary,
-    radius,
-    setRadius,
-    reset,
-    isCustomized,
-  } = useThemeCustomizer(defaultPrimary, defaultRadius)
+  const { primary, setPrimary, radius, setRadius, reset, isCustomized } = useThemeCustomizer(
+    defaultPrimary,
+    defaultRadius,
+  )
 
   const selectedNodeUuid = useMemo(() => {
     if (route.nodeUuid) return route.nodeUuid
@@ -333,10 +360,13 @@ function MainApp() {
     return nodes.find((n) => n.uuid === selectedNodeUuid) ?? null
   }, [selectedNodeUuid, nodes])
 
-
   const modes = [
     { value: "light" as const, label: <Sun className="size-3.5" />, title: t("appearanceLight") },
-    { value: "system" as const, label: <Monitor className="size-3.5" />, title: t("appearanceSystem") },
+    {
+      value: "system" as const,
+      label: <Monitor className="size-3.5" />,
+      title: t("appearanceSystem"),
+    },
     { value: "dark" as const, label: <Moon className="size-3.5" />, title: t("appearanceDark") },
   ]
 
@@ -350,11 +380,16 @@ function MainApp() {
       <header className="km-navbar sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
         <div className="@container mx-auto flex h-14 max-w-(--page-max) flex-nowrap items-center justify-between gap-2 px-3 sm:px-6">
           <div className="flex min-w-0 shrink items-center gap-2 sm:gap-4">
-            <Link href="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85"
+            >
               <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <Activity className="size-4" />
               </div>
-              <h1 className="hidden max-w-36 truncate text-sm font-semibold tracking-tight @2xl:inline">{siteTitle}</h1>
+              <h1 className="hidden max-w-36 truncate text-sm font-semibold tracking-tight @2xl:inline">
+                {siteTitle}
+              </h1>
             </Link>
 
             {/* Top navigation: the same trough as the radio groups below, as links
@@ -377,7 +412,6 @@ function MainApp() {
                 <span className="hidden @md:inline">{t("tabCharts")}</span>
               </Link>
             </div>
-
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">

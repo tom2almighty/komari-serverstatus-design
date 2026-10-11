@@ -1,7 +1,19 @@
 import type { CSSProperties } from "react"
 import {
-  siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd,
-  siLinux, siOpensuse, siRedhat, siRockylinux, siUbuntu, type SimpleIcon,
+  type SimpleIcon,
+  siAlmalinux,
+  siAlpinelinux,
+  siApple,
+  siArchlinux,
+  siCentos,
+  siDebian,
+  siFedora,
+  siFreebsd,
+  siLinux,
+  siOpensuse,
+  siRedhat,
+  siRockylinux,
+  siUbuntu,
 } from "simple-icons"
 
 import type { Node } from "@/lib/api"
@@ -17,10 +29,7 @@ export function Dot({ node, className }: { node: Node; className?: string }) {
   return (
     <span
       title={isOnline ? t("statusOnline") : isConfigured ? t("statusOffline") : t("statusPending")}
-      className={cn(
-        "relative inline-flex size-2 shrink-0 items-center justify-center",
-        className,
-      )}
+      className={cn("relative inline-flex size-2 shrink-0 items-center justify-center", className)}
     >
       {isOnline ? (
         <>
@@ -44,7 +53,9 @@ export function Flag({ code, className }: { code: string; className?: string }) 
   if (!url) return <span className="text-muted-foreground">—</span>
 
   return (
-    <span className={cn("inline-flex items-center justify-center align-middle shrink-0", className)}>
+    <span
+      className={cn("inline-flex items-center justify-center align-middle shrink-0", className)}
+    >
       <img
         src={url}
         alt={code}
@@ -57,10 +68,23 @@ export function Flag({ code, className }: { code: string; className?: string }) 
 }
 
 const DISTROS: [string, SimpleIcon][] = [
-  ["debian", siDebian], ["raspbian", siDebian], ["ubuntu", siUbuntu], ["alpine", siAlpinelinux],
-  ["centos", siCentos], ["rocky", siRockylinux], ["almalinux", siAlmalinux], ["red hat", siRedhat],
-  ["rhel", siRedhat], ["fedora", siFedora], ["arch", siArchlinux], ["opensuse", siOpensuse],
-  ["suse", siOpensuse], ["freebsd", siFreebsd], ["apple", siApple], ["darwin", siApple], ["mac", siApple],
+  ["debian", siDebian],
+  ["raspbian", siDebian],
+  ["ubuntu", siUbuntu],
+  ["alpine", siAlpinelinux],
+  ["centos", siCentos],
+  ["rocky", siRockylinux],
+  ["almalinux", siAlmalinux],
+  ["red hat", siRedhat],
+  ["rhel", siRedhat],
+  ["fedora", siFedora],
+  ["arch", siArchlinux],
+  ["opensuse", siOpensuse],
+  ["suse", siOpensuse],
+  ["freebsd", siFreebsd],
+  ["apple", siApple],
+  ["darwin", siApple],
+  ["mac", siApple],
 ]
 
 export function OsIcon({ os, className }: { os: string; className?: string }) {
@@ -72,7 +96,10 @@ export function OsIcon({ os, className }: { os: string; className?: string }) {
       viewBox="0 0 24 24"
       aria-hidden
       style={{ "--brand": `#${icon.hex}` } as CSSProperties}
-      className={cn("size-4 shrink-0 fill-(--brand) dark:fill-[color-mix(in_oklab,var(--brand)_60%,white)]", className)}
+      className={cn(
+        "size-4 shrink-0 fill-(--brand) dark:fill-[color-mix(in_oklab,var(--brand)_60%,white)]",
+        className,
+      )}
     >
       <path d={icon.path} />
     </svg>

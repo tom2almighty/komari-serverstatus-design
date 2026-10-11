@@ -7,14 +7,14 @@
     <title>Komari Monitor</title>
     <meta name="description" content="A simple server monitor tool." />
     <script>
-      (function() {
+      (() => {
         try {
-          var mode = localStorage.getItem("appearance") || localStorage.getItem("theme");
-          var isDark = mode === "dark" || (mode !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          const mode = localStorage.getItem("appearance") || localStorage.getItem("theme");
+          const isDark = mode === "dark" || (mode !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           if (isDark) {
             document.documentElement.classList.add("dark");
           }
-        } catch (e) {}
+        } catch {}
       })();
     </script>
   </head>

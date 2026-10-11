@@ -1,6 +1,6 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
 
 export default defineConfig({
   // Absolute: the hub serves the theme's dist at the site root and falls back to
@@ -8,7 +8,7 @@ export default defineConfig({
   // requested as /node/<uuid>/assets/... and answered with index.html.
   base: "/",
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { "@": import.meta.dirname + "/src" } },
+  resolve: { alias: { "@": `${import.meta.dirname}/src` } },
   build: {
     chunkSizeWarningLimit: 1200,
     // Flags stay files. Vite would inline every one under 4 KiB as a data URL,

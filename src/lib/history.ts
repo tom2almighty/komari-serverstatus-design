@@ -78,24 +78,26 @@ export function fetchHistory(uuid: string, hours: number, series: Series): Promi
   const loadData = async (): Promise<History> => {
     if (series === "metrics") {
       const res = await api<{ records: KomariLoadRecord[] }>(
-        `/records/load?uuid=${encodeURIComponent(uuid)}&hours=${hours}&load_type=all`
+        `/records/load?uuid=${encodeURIComponent(uuid)}&hours=${hours}&load_type=all`,
       ).catch(() => ({ records: [] }))
 
       const records = Array.isArray(res?.records) ? res.records : []
-      const metrics: Point[] = records.map((r) => ({
-        ts: new Date(r.time).getTime(),
-        cpu: r.cpu ?? 0,
-        mem_used: r.ram ?? 0,
-        disk_used: r.disk ?? 0,
-        net_rx: r.net_in ?? 0,
-        net_tx: r.net_out ?? 0,
-        load: r.load ?? 0,
-      })).sort((a, b) => a.ts - b.ts)
+      const metrics: Point[] = records
+        .map((r) => ({
+          ts: new Date(r.time).getTime(),
+          cpu: r.cpu ?? 0,
+          mem_used: r.ram ?? 0,
+          disk_used: r.disk ?? 0,
+          net_rx: r.net_in ?? 0,
+          net_tx: r.net_out ?? 0,
+          load: r.load ?? 0,
+        }))
+        .sort((a, b) => a.ts - b.ts)
 
       return { metrics, ping: [], probes: {} }
     } else {
       const res = await api<{ records: KomariPingRecord[]; tasks: KomariPingTask[] }>(
-        `/records/ping?uuid=${encodeURIComponent(uuid)}&hours=${hours}`
+        `/records/ping?uuid=${encodeURIComponent(uuid)}&hours=${hours}`,
       ).catch(() => ({ records: [], tasks: [] }))
 
       const records = Array.isArray(res?.records) ? res.records : []
@@ -106,11 +108,13 @@ export function fetchHistory(uuid: string, hours: number, series: Series): Promi
         probes[String(t.id)] = t.name || `Task ${t.id}`
       }
 
-      const ping: PingPoint[] = records.map((r) => ({
-        task_id: r.task_id,
-        ts: new Date(r.time).getTime(),
-        latency: r.value >= 0 ? r.value : null,
-      })).sort((a, b) => a.ts - b.ts)
+      const ping: PingPoint[] = records
+        .map((r) => ({
+          task_id: r.task_id,
+          ts: new Date(r.time).getTime(),
+          latency: r.value >= 0 ? r.value : null,
+        }))
+        .sort((a, b) => a.ts - b.ts)
 
       return { metrics: [], ping, probes }
     }

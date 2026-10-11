@@ -147,7 +147,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(`/api${path}`, {
       ...init,
-      headers: init?.body ? { "content-type": "application/json", ...init?.headers } : init?.headers,
+      headers: init?.body
+        ? { "content-type": "application/json", ...init?.headers }
+        : init?.headers,
     })
   } catch {
     throw new ApiError(0, "Network connection error")
@@ -165,11 +167,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return json as T
 }
 
-function normalizeNode(
-  client: KomariClient,
-  isOnline: boolean,
-  metric?: KomariLiveMetric,
-): Node {
+function normalizeNode(client: KomariClient, isOnline: boolean, metric?: KomariLiveMetric): Node {
   const m: Metrics | null = metric
     ? {
         uptime: metric.uptime ?? 0,
@@ -228,8 +226,8 @@ export function useNodes(transport?: string) {
 
   useEffect(() => {
     let socket: WebSocket | null = null
-    let pollTimer: number | undefined = undefined
-    let healthTimer: number | undefined = undefined
+    let pollTimer: number | undefined
+    let healthTimer: number | undefined
     let clientsCache: KomariClient[] = []
     let stopped = false
     const updateCombined = (

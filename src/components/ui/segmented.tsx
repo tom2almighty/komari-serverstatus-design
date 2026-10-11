@@ -29,7 +29,11 @@ export type SegmentedOption<T> = {
  * the chosen position takes a tab stop.
  */
 export function Segmented<T extends string | number>({
-  value, onChange, options, label, className,
+  value,
+  onChange,
+  options,
+  label,
+  className,
 }: {
   value: T
   onChange: (value: T) => void
@@ -44,7 +48,12 @@ export function Segmented<T extends string | number>({
       aria-label={label}
       className={cn(SEGMENT.list, className)}
       onKeyDown={(e) => {
-        const by = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0
+        const by =
+          e.key === "ArrowRight" || e.key === "ArrowDown"
+            ? 1
+            : e.key === "ArrowLeft" || e.key === "ArrowUp"
+              ? -1
+              : 0
         if (!by) return
         e.preventDefault()
         const next = (at + by + options.length) % options.length

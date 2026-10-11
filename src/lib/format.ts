@@ -46,13 +46,25 @@ export function duration(seconds: number, dayUnit = "天"): string {
 }
 
 const VIRT: Record<string, string> = {
-  kvm: "KVM", qemu: "QEMU", vmware: "VMware", microsoft: "Hyper-V", xen: "Xen", oracle: "VirtualBox",
-  parallels: "Parallels", bhyve: "bhyve", openvz: "OpenVZ", lxc: "LXC", "lxc-libvirt": "LXC", docker: "Docker",
-  podman: "Podman", wsl: "WSL", "systemd-nspawn": "nspawn",
+  kvm: "KVM",
+  qemu: "QEMU",
+  vmware: "VMware",
+  microsoft: "Hyper-V",
+  xen: "Xen",
+  oracle: "VirtualBox",
+  parallels: "Parallels",
+  bhyve: "bhyve",
+  openvz: "OpenVZ",
+  lxc: "LXC",
+  "lxc-libvirt": "LXC",
+  docker: "Docker",
+  podman: "Podman",
+  wsl: "WSL",
+  "systemd-nspawn": "nspawn",
 }
 
 export function virtName(virt: string): string {
-  return !virt || virt === "none" ? "" : VIRT[virt] ?? virt
+  return !virt || virt === "none" ? "" : (VIRT[virt] ?? virt)
 }
 
 export function percent(used: number, total: number): number {
@@ -179,7 +191,9 @@ export function cpuName(name: string): string {
     .trim()
 }
 
-const TICK_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440, 2880, 10080].map((m) => m * 60_000)
+const TICK_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440, 2880, 10080].map(
+  (m) => m * 60_000,
+)
 
 export function timeTicks(from: number, to: number, count = 8): number[] {
   const step = TICK_STEPS.find((s) => (to - from) / s <= count) ?? TICK_STEPS[TICK_STEPS.length - 1]
@@ -209,12 +223,22 @@ export function despike(values: (number | null)[], window = 7, sigmas = 3): (num
   const half = window >> 1
   return values.map((v, i) => {
     if (v === null) return v
-    const near = values.slice(Math.max(0, i - half), i + half + 1).filter((n) => n !== null) as number[]
+    const near = values
+      .slice(Math.max(0, i - half), i + half + 1)
+      .filter((n) => n !== null) as number[]
     if (near.length === 0) return v
     const sorted = [...near].sort((a, b) => a - b)
-    const mid = sorted.length % 2 ? sorted[sorted.length >> 1] : (sorted[(sorted.length >> 1) - 1] + sorted[sorted.length >> 1]) / 2
+    const mid =
+      sorted.length % 2
+        ? sorted[sorted.length >> 1]
+        : (sorted[(sorted.length >> 1) - 1] + sorted[sorted.length >> 1]) / 2
     const devs = near.map((n) => Math.abs(n - mid)).sort((a, b) => a - b)
-    const mad = Math.max(1, devs.length % 2 ? devs[devs.length >> 1] : (devs[(devs.length >> 1) - 1] + devs[devs.length >> 1]) / 2)
+    const mad = Math.max(
+      1,
+      devs.length % 2
+        ? devs[devs.length >> 1]
+        : (devs[(devs.length >> 1) - 1] + devs[devs.length >> 1]) / 2,
+    )
     return Math.abs(v - mid) > sigmas * 1.4826 * mad ? mid : v
   })
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentProps } from "react"
+import { type ComponentProps, useEffect, useState } from "react"
 
 export type RouteState = {
   tab: "servers" | "charts"
@@ -39,7 +39,15 @@ export function Link({ href, onClick, ...props }: ComponentProps<"a"> & { href: 
       href={href}
       onClick={(e) => {
         onClick?.(e)
-        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey
+        )
+          return
         e.preventDefault()
         navigate(href)
       }}

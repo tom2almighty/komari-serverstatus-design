@@ -1,4 +1,4 @@
-import * as React from "react"
+import type * as React from "react"
 import { cn } from "@/lib/utils"
 
 export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -7,14 +7,9 @@ export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   indicatorClassName?: string
 }
 
-function Progress({
-  className,
-  value,
-  max = 100,
-  indicatorClassName,
-  ...props
-}: ProgressProps) {
-  const pct = value === null || value === undefined ? 0 : Math.min(100, Math.max(0, (value / max) * 100))
+function Progress({ className, value, max = 100, indicatorClassName, ...props }: ProgressProps) {
+  const pct =
+    value === null || value === undefined ? 0 : Math.min(100, Math.max(0, (value / max) * 100))
 
   return (
     <div
@@ -28,7 +23,10 @@ function Progress({
     >
       <div
         data-slot="progress-indicator"
-        className={cn("h-full w-full rounded-full transition-[width] duration-500", indicatorClassName ?? "bg-primary")}
+        className={cn(
+          "h-full w-full rounded-full transition-[width] duration-500",
+          indicatorClassName ?? "bg-primary",
+        )}
         style={{ width: `${pct}%` }}
       />
     </div>
