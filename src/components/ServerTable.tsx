@@ -503,7 +503,7 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
         {/* 数据表格：百分比固定列宽 + 移动端9列/桌面端11列，完全不横向滚动 */}
         <div className="relative w-full overflow-hidden">
           <Table
-            className="km-ui-table table-fixed w-full text-center text-xs md:text-sm [&_tbody_tr]:h-8 sm:[&_tbody_tr]:h-[30px]"
+            className="km-ui-table table-fixed w-full text-center text-xs md:text-sm [&_tbody_tr]:h-8 sm:[&_tbody_tr]:h-7.5"
             containerClassName="relative w-full overflow-hidden"
           >
             {/* 使用 colgroup 锁死列宽百分比模型 */}

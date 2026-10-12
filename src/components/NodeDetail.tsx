@@ -445,7 +445,7 @@ export function MetricCharts({
   return (
     <div className={cn("transition-opacity flex-1 min-h-0", loading && "opacity-50")}>
       {chart === "all" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full min-h-[460px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full min-h-115">
           {/* CPU Chart */}
           <Panel title={t("colCpu")} className="min-h-52">
             <ResponsiveContainer width="100%" height="100%">
@@ -815,11 +815,11 @@ export function NodeDetail({ node }: { node: Node }) {
       )}
 
       {(chart === "ping" || known === undefined) && (
-        <div hidden={chart !== "ping"} className="flex-1 min-h-[400px]">
+        <div hidden={chart !== "ping"} className="flex-1 min-h-100">
           <Latency
             uuid={node.uuid}
             hours={hours}
-            className="h-full min-h-[380px]"
+            className="h-full min-h-95"
             onKnown={learn}
           />
         </div>
