@@ -21,21 +21,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
       - name: Sync version from git tag
         id: version
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
-          node -e "
+          bun -e "
             const fs = require('fs');
             for (const file of ['komari-theme.json', 'package.json']) {
               const data = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -45,10 +40,10 @@ jobs:
           "
           echo "version=$tag" >> "$GITHUB_OUTPUT"
       - name: Build
-        run: pnpm run build
+        run: bun run build
 
       - name: Verify the theme package
-        run: pnpm run verify
+        run: bun run verify
 
       - name: Publish
         env:

@@ -46,7 +46,7 @@ theme.zip
 ### 3. 前端工程与设计系统约束
 
 1. **工程基建**：
-   - 包管理器使用 Bun，构建工具使用 Vite，样式引擎使用 Tailwind CSS v4，代码检查使用 Oxlint。
+   - 包管理器使用 Bun，构建工具使用 Vite，样式引擎使用 Tailwind CSS v4，代码检查与格式化使用 Biome。
 2. **Shadcn UI 与 Token 约束**：
    - 严格使用语义化颜色 Token（`bg-background`、`text-foreground`、`text-muted-foreground`、`border-border`、`bg-card`、`bg-primary`、`text-primary-foreground` 等），严禁硬编码具体色值（如 `bg-gray-100`、`text-zinc-600`）。
    - 图表颜色使用 `--chart-1` 到 `--chart-5` 语义变量，遵循 Shadcn UI 官方标准色盘。
@@ -65,9 +65,9 @@ theme.zip
 在提交代码并打标签前，必须依次执行静态检查、构建与完整打包校验：
 
 ```bash
-pnpm run lint     # 检查代码静态规范，必须为 0 error 0 warning
-pnpm run build    # 执行类型检查、前端编译并自动运行 scripts/pack.mjs 生成 theme.zip
-pnpm run verify   # 严格校验 theme.zip 的体积限制、占位符完整性与 SHA-256 签名
+bun run lint     # 检查代码静态规范，必须为 0 error 0 warning
+bun run build    # 执行类型检查、前端编译并自动运行 scripts/pack.mjs 生成 theme.zip
+bun run verify   # 严格校验 theme.zip 的体积限制、占位符完整性与 SHA-256 签名
 ```
 
 ### 2. GitHub Release 发布
@@ -80,8 +80,8 @@ pnpm run verify   # 严格校验 theme.zip 的体积限制、占位符完整性�
    ```
 3. GitHub Actions 触发 `release.yml` 工作流：
    - 校验 Tag 名字与 `komari-theme.json` 中的 `version` 字段是否严格一致；
-   - 自动执行 `pnpm run build` 生成 `theme.zip`；
-   - 运行 `pnpm run verify` 完成安全边界检测；
+   - 自动执行 `bun run build` 生成 `theme.zip`；
+   - 运行 `bun run verify` 完成安全边界检测；
    - 调用 GitHub CLI 创建 Release，上传资产 `theme.zip` 并在 Release 说明中附带 SHA-256 校验和。
 
 ### 3. 主题市场同步

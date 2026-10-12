@@ -816,12 +816,7 @@ export function NodeDetail({ node }: { node: Node }) {
 
       {(chart === "ping" || known === undefined) && (
         <div hidden={chart !== "ping"} className="flex-1 min-h-100">
-          <Latency
-            uuid={node.uuid}
-            hours={hours}
-            className="h-full min-h-95"
-            onKnown={learn}
-          />
+          <Latency uuid={node.uuid} hours={hours} className="h-full min-h-95" onKnown={learn} />
         </div>
       )}
     </div>

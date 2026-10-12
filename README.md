@@ -4,12 +4,12 @@
 
 ## 开发环境配置
 
-- 运行环境：Node.js >= 22.12 与 pnpm >= 12
+- 运行环境：Bun >= 1.2
 - 启动本地开发服务：
 
 ```bash
-pnpm install
-pnpm run dev
+bun install
+bun run dev
 ```
 
 本地服务默认运行在 `http://localhost:5173`。
@@ -19,8 +19,8 @@ pnpm run dev
 生产环境构建与主题打包命令：
 
 ```bash
-pnpm run build
-pnpm run verify
+bun run build
+bun run verify
 ```
 
 构建完成后将在项目根目录生成符合 Komari 主题市场规范的 `theme.zip` 安装包。
