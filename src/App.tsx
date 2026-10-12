@@ -1,31 +1,12 @@
-import {
-  Activity,
-  Check,
-  Globe,
-  Monitor,
-  Moon,
-  Palette,
-  RotateCcw,
-  Settings,
-  Sun,
-} from "lucide-react"
-import { type CSSProperties, useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { Activity, Globe, Monitor, Moon, Settings, Sun } from "lucide-react"
+import { type CSSProperties, useEffect, useState, useSyncExternalStore } from "react"
 import { ServerTable, ServerTableSkeleton } from "@/components/ServerTable"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Segmented } from "@/components/ui/segmented"
 import { api, type PublicSettings, useNodes } from "@/lib/api"
 import { I18nProvider, useI18n } from "@/lib/i18n"
 import { Link } from "@/lib/route"
-import {
-  applyTheme,
-  clampPageWidth,
-  DEFAULT_RADIUS,
-  PRIMARY_COLOR_PRESETS,
-  RADIUS_PRESETS,
-} from "@/lib/themes"
-import { cn } from "@/lib/utils"
+import { clampPageWidth } from "@/lib/themes"
 
 const DARK_MEDIA = matchMedia("(prefers-color-scheme: dark)")
 type Mode = "light" | "dark" | "system"
@@ -78,193 +59,6 @@ function useTheme() {
   }
 
   return { mode, dark, choose }
-}
-
-function useThemeCustomizer(serverCustomPrimary = "", serverCustomRadius = DEFAULT_RADIUS) {
-  const [primary, setPrimary] = useState<string>(() => {
-    try {
-      return localStorage.getItem("theme-primary") ?? serverCustomPrimary
-    } catch {
-      return serverCustomPrimary
-    }
-  })
-
-  const [radius, setRadius] = useState<string>(() => {
-    try {
-      return localStorage.getItem("theme-radius") ?? serverCustomRadius
-    } catch {
-      return serverCustomRadius
-    }
-  })
-
-  useEffect(() => {
-    applyTheme(primary, radius)
-    try {
-      if (primary.trim()) localStorage.setItem("theme-primary", primary.trim())
-      else localStorage.removeItem("theme-primary")
-
-      if (radius.trim()) localStorage.setItem("theme-radius", radius.trim())
-      else localStorage.removeItem("theme-radius")
-    } catch {}
-  }, [primary, radius])
-
-  const reset = () => {
-    setPrimary("")
-    setRadius(DEFAULT_RADIUS)
-    try {
-      localStorage.removeItem("theme-primary")
-      localStorage.removeItem("theme-radius")
-    } catch {}
-  }
-
-  return {
-    primary,
-    setPrimary,
-    radius,
-    setRadius,
-    reset,
-    isCustomized: Boolean(primary.trim() || (radius && radius !== DEFAULT_RADIUS)),
-  }
-}
-
-function ThemeSettingsPopover({
-  primary,
-  onPrimaryChange,
-  radius,
-  onRadiusChange,
-  onReset,
-  isCustomized,
-}: {
-  primary: string
-  onPrimaryChange: (val: string) => void
-  radius: string
-  onRadiusChange: (val: string) => void
-  onReset: () => void
-  isCustomized: boolean
-}) {
-  const { t } = useI18n()
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const clickAway = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    if (open) document.addEventListener("mousedown", clickAway)
-    return () => document.removeEventListener("mousedown", clickAway)
-  }, [open])
-
-  return (
-    <div className="relative" ref={ref}>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => setOpen((o) => !o)}
-        title={t("themeCustomizer")}
-        className={cn(
-          "text-muted-foreground hover:text-foreground cursor-pointer",
-          open && "bg-accent text-foreground",
-        )}
-      >
-        <Palette className="size-4" />
-      </Button>
-
-      {open && (
-        <Card className="absolute right-0 top-full z-50 mt-2 w-72 p-3.5 shadow-xs border-border/80 bg-popover text-popover-foreground">
-          <div className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <Palette className="size-3.5 text-primary" />
-                {t("themeCustomizer")}
-              </h4>
-              {isCustomized && (
-                <button
-                  type="button"
-                  onClick={onReset}
-                  title={t("resetStyle")}
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <RotateCcw className="size-3" />
-                  <span>{t("resetStyle")}</span>
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("themePrimary")}
-              </label>
-              <div className="flex items-center gap-1.5">
-                {PRIMARY_COLOR_PRESETS.map((p) => {
-                  const active =
-                    primary.toLowerCase() === p.value.toLowerCase() ||
-                    (!primary && p.value === "#18181b")
-                  return (
-                    <button
-                      key={p.name}
-                      type="button"
-                      onClick={() => onPrimaryChange(p.value)}
-                      title={p.name}
-                      style={{ backgroundColor: p.value }}
-                      className={cn(
-                        "size-6 rounded-full flex items-center justify-center transition-transform hover:scale-105 cursor-pointer ring-offset-background",
-                        active && "ring-2 ring-foreground ring-offset-1",
-                      )}
-                    >
-                      {active && <Check className="size-3 text-primary-foreground" />}
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className="flex items-center gap-1.5 pt-1">
-                <input
-                  type="color"
-                  value={primary || "#18181b"}
-                  onChange={(e) => onPrimaryChange(e.target.value)}
-                  className="size-7 rounded-md border border-border cursor-pointer p-0 bg-transparent shrink-0"
-                />
-                <Input
-                  placeholder="#18181b"
-                  value={primary}
-                  onChange={(e) => onPrimaryChange(e.target.value)}
-                  className="h-7 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 pt-2 border-t border-border/60">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("themeRadius")}
-              </label>
-              <div className="grid grid-cols-5 gap-1">
-                {RADIUS_PRESETS.map((r) => {
-                  const active = (radius || DEFAULT_RADIUS) === r.value
-                  return (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => onRadiusChange(r.value)}
-                      className={cn(
-                        "h-6 rounded-md text-xs font-mono border transition-colors cursor-pointer",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground font-semibold"
-                          : "border-border/60 hover:bg-muted/40 text-muted-foreground",
-                      )}
-                    >
-                      {r.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-    </div>
-  )
 }
 
 type Me = { username?: string; logged_in?: boolean }
@@ -321,16 +115,9 @@ function MainApp() {
       .catch(() => {})
   }, [])
 
-  const defaultPrimary = String(publicInfo?.theme_settings?.custom_primary ?? "")
-  const defaultRadius = String(publicInfo?.theme_settings?.custom_radius ?? DEFAULT_RADIUS)
   const pageWidth = clampPageWidth(Number(publicInfo?.theme_settings?.max_width))
   const announcement = String(publicInfo?.theme_settings?.announcement ?? "")
   const siteTitle = publicInfo?.sitename || t("siteTitle")
-
-  const { primary, setPrimary, radius, setRadius, reset, isCustomized } = useThemeCustomizer(
-    defaultPrimary,
-    defaultRadius,
-  )
 
   const modes = [
     { value: "light" as const, label: <Sun className="size-3.5" />, title: t("appearanceLight") },
@@ -391,15 +178,6 @@ function MainApp() {
               <Globe className="size-3.5 mr-1" />
               {locale === "zh-CN" ? "EN" : "中"}
             </Button>
-
-            <ThemeSettingsPopover
-              primary={primary}
-              onPrimaryChange={setPrimary}
-              radius={radius}
-              onRadiusChange={setRadius}
-              onReset={reset}
-              isCustomized={isCustomized}
-            />
 
             {admin && (
               <a

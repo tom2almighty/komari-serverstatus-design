@@ -14,45 +14,6 @@
     },
     "data": [
       {
-        "name": {
-          "zh-CN": "外观配置",
-          "en": "Appearance Settings"
-        },
-        "type": "title"
-      },
-      {
-        "key": "default_appearance",
-        "name": {
-          "zh-CN": "默认明暗模式",
-          "en": "Default Appearance"
-        },
-        "type": "select",
-        "options": "system,light,dark",
-        "default": "system",
-        "help": "系统默认外观模式（跟随系统、浅色、深色）"
-      },
-      {
-        "key": "custom_primary",
-        "name": {
-          "zh-CN": "自定义主色 (HEX 或 CSS 色值)",
-          "en": "Custom Primary Color"
-        },
-        "type": "string",
-        "default": "",
-        "help": "留空使用 shadcn 默认深黑/微白主色"
-      },
-      {
-        "key": "custom_radius",
-        "name": {
-          "zh-CN": "默认圆角大小",
-          "en": "Default Radius"
-        },
-        "type": "select",
-        "options": "0rem,0.3rem,0.5rem,0.75rem,1.0rem",
-        "default": "0.5rem",
-        "help": "组件与卡片的基础圆角大小"
-      },
-      {
         "key": "rpcTransport",
         "name": {
           "zh-CN": "监控通信方式",
