@@ -34,10 +34,12 @@ export const translations = {
     colUptime: "运行时间",
     colExpiry: "到期时间",
     colLoad: "负载",
-    colSpeed: "网络速率",
+    colSpeed: "网络",
+    netDown: "下载 ↓",
+    netUp: "上传 ↑",
     colCpu: "CPU",
     colMem: "内存",
-    colDisk: "磁盘",
+    colDisk: "硬盘",
     colTraffic: "月流量",
     // Headers are set short: a twelve-column table has no room for the full
     // names above their own columns, and the detail panel spells them out.
@@ -57,7 +59,7 @@ export const translations = {
     coresUnit: "核",
 
     // Detail & Charts
-    detailSpecs: "硬件规格",
+    detailSpecs: "概览",
     detailResources: "资源监控",
     detailNetwork: "网络流量",
     detailBilling: "账期信息",
@@ -137,6 +139,8 @@ export const translations = {
     colExpiry: "Expiry",
     colLoad: "Load",
     colSpeed: "Network",
+    netDown: "Download ↓",
+    netUp: "Upload ↑",
     colCpu: "CPU",
     colMem: "Memory",
     colDisk: "Disk",
@@ -157,7 +161,7 @@ export const translations = {
     coresUnit: "Cores",
 
     // Detail & Charts
-    detailSpecs: "Specifications",
+    detailSpecs: "Overview",
     detailResources: "Resources",
     detailNetwork: "Network & Traffic",
     detailBilling: "Billing & Term",

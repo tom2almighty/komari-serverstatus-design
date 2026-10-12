@@ -1,5 +1,12 @@
 import { ArrowLeft } from "lucide-react"
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import {
   Area,
   AreaChart,
@@ -49,10 +56,21 @@ import { usePref } from "@/lib/prefs"
 import { Link } from "@/lib/route"
 import { cn } from "@/lib/utils"
 
-const AXIS = { stroke: "currentColor", fontSize: 11, tickLine: false, axisLine: false }
-const SERIES = { dot: false as const, strokeWidth: 1.5, isAnimationActive: false }
-const Y_WIDTH = 68
+function useIsDesktop() {
+  return useSyncExternalStore(
+    (cb) => {
+      if (typeof window === "undefined") return () => {}
+      const m = window.matchMedia("(min-width: 768px)")
+      m.addEventListener("change", cb)
+      return () => m.removeEventListener("change", cb)
+    },
+    () => (typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : true),
+    () => true,
+  )
+}
 
+const AXIS = { stroke: "currentColor", fontSize: 10, tickLine: false, axisLine: false }
+const SERIES = { dot: false as const, strokeWidth: 1.5, isAnimationActive: false }
 const PALETTE = [1, 2, 3, 4, 5].map((i) => `var(--color-chart-${i})`)
 
 const TIP = {
@@ -65,13 +83,21 @@ const TIP = {
   boxShadow: "0 4px 12px rgb(0 0 0 / 0.1)",
 }
 
-function Panel({ title, children }: { title: ReactNode; children: ReactNode }) {
+function Panel({
+  title,
+  className,
+  children,
+}: {
+  title: ReactNode
+  className?: string
+  children: ReactNode
+}) {
   return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="border-b px-4 py-3">
-        <CardTitle className="text-sm">{title}</CardTitle>
+    <Card className={cn("gap-0 py-0 rounded-md shadow-xs flex flex-col min-h-0", className)}>
+      <CardHeader className="border-b px-3.5 py-2 shrink-0">
+        <CardTitle className="text-xs font-semibold">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-64 p-4 text-muted-foreground">{children}</CardContent>
+      <CardContent className="flex-1 min-h-0 p-3 text-muted-foreground">{children}</CardContent>
     </Card>
   )
 }
@@ -159,6 +185,8 @@ export function Latency({
   onKnown?: (has: boolean) => void
 }) {
   const { t } = useI18n()
+  const isDesktop = useIsDesktop()
+  const yWidth = isDesktop ? 44 : 24
   const [picked, setPicked] = usePref<number>("latency-hours", LATENCY_HOURS)
   const hours = fixed ?? (inRanges(picked) ? picked : LATENCY_HOURS)
   const { data, failed, loading, retry } = useHistory(uuid, hours, "ping")
@@ -285,7 +313,7 @@ export function Latency({
           <LineChart data={chartRows}>
             <CartesianGrid className="stroke-border" vertical={false} />
             <XAxis {...timeAxis(chartRows, hours)} />
-            <YAxis unit="ms" width={Y_WIDTH} allowDecimals={false} {...AXIS} />
+            <YAxis unit="ms" width={yWidth} allowDecimals={false} {...AXIS} />
             <Tooltip
               labelFormatter={label}
               formatter={(v) => `${Math.round(Number(v))} ms`}
@@ -349,32 +377,22 @@ export function Latency({
     </div>
   )
 }
-
-export function NodeDetail({ node }: { node: Node }) {
+export function MetricCharts({
+  uuid,
+  node,
+  chart = "all",
+  hours = 6,
+}: {
+  uuid: string
+  node?: Node
+  chart?: string
+  hours?: number
+}) {
   const { t } = useI18n()
-  const [hours, setHours] = useState(6)
-  const [picked, setChart] = usePref<string>("chart", "cpu")
-  const [learned, setLearned] = useState<{ uuid: string; has: boolean } | null>(null)
-  const known = learned !== null && learned.uuid === node.uuid ? learned.has : knownPing(node.uuid)
-  const learn = useCallback((has: boolean) => setLearned({ uuid: node.uuid, has }), [node.uuid])
-
-  const CHARTS = [
-    { key: "cpu", labelKey: "colCpu" as TranslationKey },
-    { key: "mem", labelKey: "colMem" as TranslationKey },
-    { key: "net", labelKey: "colSpeed" as TranslationKey },
-    { key: "disk", labelKey: "colDisk" as TranslationKey },
-    { key: "ping", labelKey: "detailPingHistory" as TranslationKey },
-  ]
-
-  const charts = CHARTS.filter((c) => c.key !== "ping" || known === true)
-  const chart = charts.some((c) => c.key === picked) ? picked : "cpu"
-  const { data, failed, loading, retry } = useHistory(node.uuid, hours, "metrics")
-
-  const m = node.metrics
-  const away = useMemo(
-    () => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0),
-    [node.last_seen],
-  )
+  const isDesktop = useIsDesktop()
+  const yWidth = isDesktop ? 54 : 26
+  const formatBytesAxis = (v: number) => (isDesktop ? axisBytes(v) : compact(v))
+  const { data, failed, loading, retry } = useHistory(uuid, hours, "metrics")
 
   const metricRows = useMemo(() => {
     const raw = data?.metrics ?? []
@@ -406,10 +424,316 @@ export function NodeDetail({ node }: { node: Node }) {
   }, [metricRows])
 
   const label = (ts: unknown) => new Date(Number(ts)).toLocaleString()
+  const memTotal = node?.mem_total ?? 0
+  const diskTotal = node?.disk_total ?? 0
+
+  if (!data && loading) return <Skeleton className="h-64 w-full" />
+  if (failed) {
+    return (
+      <div className="py-8 text-center text-xs text-destructive">
+        {failed}{" "}
+        <button onClick={retry} className="ml-1 underline cursor-pointer">
+          Retry
+        </button>
+      </div>
+    )
+  }
+  if (metricRows.length === 0) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t("noChartData")}</p>
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+    <div className={cn("transition-opacity flex-1 min-h-0", loading && "opacity-50")}>
+      {chart === "all" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full min-h-[460px]">
+          {/* CPU Chart */}
+          <Panel title={t("colCpu")} className="min-h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={metricRows}>
+                <CartesianGrid className="stroke-border" vertical={false} />
+                <XAxis {...timeAxis(metricRows, hours)} />
+                <YAxis
+                  domain={[0, tops.cpu]}
+                  ticks={quarters(tops.cpu)}
+                  unit="%"
+                  width={yWidth}
+                  {...AXIS}
+                />
+                <Tooltip
+                  labelFormatter={label}
+                  formatter={(v) => [`${Number(v).toFixed(1)}%`, "CPU"]}
+                  contentStyle={TIP}
+                />
+                <Area
+                  dataKey="cpu"
+                  stroke="var(--color-chart-1)"
+                  fill="var(--color-chart-1)"
+                  fillOpacity={0.15}
+                  {...SERIES}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Panel>
+
+          {/* Memory Chart */}
+          <Panel
+            title={`${t("colMem")}${memTotal ? ` · ${bytes(memTotal)}` : ""}`}
+            className="min-h-52"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={metricRows}>
+                <CartesianGrid className="stroke-border" vertical={false} />
+                <XAxis {...timeAxis(metricRows, hours)} />
+                <YAxis
+                  domain={[0, memTotal || "auto"]}
+                  ticks={memTotal ? quarters(memTotal) : undefined}
+                  tickFormatter={formatBytesAxis}
+                  width={yWidth}
+                  {...AXIS}
+                />
+                <Tooltip
+                  labelFormatter={label}
+                  formatter={(v) => bytes(Number(v))}
+                  contentStyle={TIP}
+                />
+                <Area
+                  dataKey="mem_used"
+                  name={t("colMem")}
+                  stroke="var(--color-chart-4)"
+                  fill="var(--color-chart-4)"
+                  fillOpacity={0.15}
+                  {...SERIES}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Panel>
+
+          {/* Network Chart */}
+          <Panel
+            title={
+              <>
+                {t("colSpeed")}
+                <span className="ml-3 text-chart-2 font-medium">● {t("netDown")}</span>
+                <span className="ml-2 text-chart-3 font-medium">● {t("netUp")}</span>
+              </>
+            }
+            className="min-h-52"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={metricRows}>
+                <CartesianGrid className="stroke-border" vertical={false} />
+                <XAxis {...timeAxis(metricRows, hours)} />
+                <YAxis
+                  domain={[0, tops.rate]}
+                  ticks={quarters(tops.rate)}
+                  tickFormatter={formatBytesAxis}
+                  unit={isDesktop ? "/s" : ""}
+                  width={yWidth}
+                  {...AXIS}
+                />
+                <Tooltip
+                  labelFormatter={label}
+                  formatter={(v) => rate(Number(v))}
+                  contentStyle={TIP}
+                />
+                <Line
+                  dataKey="net_rx"
+                  name={t("netDown")}
+                  stroke="var(--color-chart-2)"
+                  {...SERIES}
+                />
+                <Line
+                  dataKey="net_tx"
+                  name={t("netUp")}
+                  stroke="var(--color-chart-3)"
+                  {...SERIES}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Panel>
+
+          {/* Disk Chart */}
+          <Panel
+            title={`${t("colDisk")}${diskTotal ? ` · ${bytes(diskTotal)}` : ""}`}
+            className="min-h-52"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={metricRows}>
+                <CartesianGrid className="stroke-border" vertical={false} />
+                <XAxis {...timeAxis(metricRows, hours)} />
+                <YAxis
+                  domain={[0, diskTotal || "auto"]}
+                  ticks={diskTotal ? quarters(diskTotal) : undefined}
+                  tickFormatter={formatBytesAxis}
+                  width={yWidth}
+                  {...AXIS}
+                />
+                <Tooltip
+                  labelFormatter={label}
+                  formatter={(v) => bytes(Number(v))}
+                  contentStyle={TIP}
+                />
+                <Area
+                  dataKey="disk_used"
+                  name={t("colDisk")}
+                  stroke="var(--color-chart-5)"
+                  fill="var(--color-chart-5)"
+                  fillOpacity={0.15}
+                  {...SERIES}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Panel>
+        </div>
+      ) : chart === "cpu" ? (
+        <div className="h-68 sm:h-76 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={metricRows}>
+              <CartesianGrid className="stroke-border" vertical={false} />
+              <XAxis {...timeAxis(metricRows, hours)} />
+              <YAxis
+                domain={[0, tops.cpu]}
+                ticks={quarters(tops.cpu)}
+                unit="%"
+                width={yWidth}
+                {...AXIS}
+              />
+              <Tooltip
+                labelFormatter={label}
+                formatter={(v) => [`${Number(v).toFixed(1)}%`, "CPU"]}
+                contentStyle={TIP}
+              />
+              <Area
+                dataKey="cpu"
+                stroke="var(--color-chart-1)"
+                fill="var(--color-chart-1)"
+                fillOpacity={0.15}
+                {...SERIES}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : chart === "mem" ? (
+        <div className="h-68 sm:h-76 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={metricRows}>
+              <CartesianGrid className="stroke-border" vertical={false} />
+              <XAxis {...timeAxis(metricRows, hours)} />
+              <YAxis
+                domain={[0, memTotal || "auto"]}
+                ticks={memTotal ? quarters(memTotal) : undefined}
+                tickFormatter={formatBytesAxis}
+                width={yWidth}
+                {...AXIS}
+              />
+              <Tooltip
+                labelFormatter={label}
+                formatter={(v) => bytes(Number(v))}
+                contentStyle={TIP}
+              />
+              <Area
+                dataKey="mem_used"
+                name={t("colMem")}
+                stroke="var(--color-chart-4)"
+                fill="var(--color-chart-4)"
+                fillOpacity={0.15}
+                {...SERIES}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : chart === "net" ? (
+        <div className="h-68 sm:h-76 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={metricRows}>
+              <CartesianGrid className="stroke-border" vertical={false} />
+              <XAxis {...timeAxis(metricRows, hours)} />
+              <YAxis
+                domain={[0, tops.rate]}
+                ticks={quarters(tops.rate)}
+                tickFormatter={formatBytesAxis}
+                unit={isDesktop ? "/s" : ""}
+                width={yWidth}
+                {...AXIS}
+              />
+              <Tooltip
+                labelFormatter={label}
+                formatter={(v) => rate(Number(v))}
+                contentStyle={TIP}
+              />
+              <Line
+                dataKey="net_rx"
+                name={t("netDown")}
+                stroke="var(--color-chart-2)"
+                {...SERIES}
+              />
+              <Line dataKey="net_tx" name={t("netUp")} stroke="var(--color-chart-3)" {...SERIES} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="h-68 sm:h-76 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={metricRows}>
+              <CartesianGrid className="stroke-border" vertical={false} />
+              <XAxis {...timeAxis(metricRows, hours)} />
+              <YAxis
+                domain={[0, diskTotal || "auto"]}
+                ticks={diskTotal ? quarters(diskTotal) : undefined}
+                tickFormatter={formatBytesAxis}
+                width={yWidth}
+                {...AXIS}
+              />
+              <Tooltip
+                labelFormatter={label}
+                formatter={(v) => bytes(Number(v))}
+                contentStyle={TIP}
+              />
+              <Area
+                dataKey="disk_used"
+                name={t("colDisk")}
+                stroke="var(--color-chart-5)"
+                fill="var(--color-chart-5)"
+                fillOpacity={0.15}
+                {...SERIES}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function NodeDetail({ node }: { node: Node }) {
+  const { t } = useI18n()
+  const [hours, setHours] = useState(6)
+  const [picked, setChart] = usePref<string>("chart", "cpu")
+  const [learned, setLearned] = useState<{ uuid: string; has: boolean } | null>(null)
+  const known = learned !== null && learned.uuid === node.uuid ? learned.has : knownPing(node.uuid)
+  const learn = useCallback((has: boolean) => setLearned({ uuid: node.uuid, has }), [node.uuid])
+
+  const CHARTS = [
+    { key: "all", labelKey: "tabCharts" as TranslationKey },
+    { key: "cpu", labelKey: "colCpu" as TranslationKey },
+    { key: "mem", labelKey: "colMem" as TranslationKey },
+    { key: "net", labelKey: "colSpeed" as TranslationKey },
+    { key: "disk", labelKey: "colDisk" as TranslationKey },
+    { key: "ping", labelKey: "detailPingHistory" as TranslationKey },
+  ]
+
+  const charts = CHARTS.filter((c) => c.key !== "ping" || known === true)
+  const chart = charts.some((c) => c.key === picked) ? picked : "all"
+
+  const m = node.metrics
+  const away = useMemo(
+    () => (node.last_seen ? Math.floor(Date.now() / 1000 - node.last_seen) : 0),
+    [node.last_seen],
+  )
+
+  return (
+    <div className="flex flex-col h-full min-h-0 space-y-3">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <Dot node={node} />
           <Flag code={node.country} className="text-sm" />
@@ -442,36 +766,35 @@ export function NodeDetail({ node }: { node: Node }) {
       </div>
 
       {m && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 shrink-0">
+          <div className="rounded-md border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colCpu")}</span>
             <p className="tnum font-bold text-foreground mt-0.5">{m.cpu.toFixed(1)}%</p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
+          <div className="rounded-md border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colMem")}</span>
             <p className="tnum font-bold text-foreground mt-0.5">
               {percent(m.mem_used, m.mem_total).toFixed(1)}%
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
+          <div className="rounded-md border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colSpeed")}</span>
             <p className="tnum font-bold text-foreground mt-0.5">
               ↓ {compact(m.net_rx)}/s · ↑ {compact(m.net_tx)}/s
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5 text-xs shadow-2xs">
+          <div className="rounded-md border bg-card p-2.5 text-xs shadow-2xs">
             <span className="text-muted-foreground">{t("colLoad")}</span>
             <p className="tnum font-bold text-foreground mt-0.5">{m.load[0].toFixed(2)}</p>
           </div>
         </div>
       )}
       {node.remark && (
-        <p className="rounded-lg border border-border/80 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+        <p className="rounded-md border border-border/80 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed shrink-0">
           {node.remark}
         </p>
       )}
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-4 shrink-0">
         <Segmented
           value={chart}
           onChange={setChart}
@@ -487,144 +810,18 @@ export function NodeDetail({ node }: { node: Node }) {
         />
       </div>
 
-      {chart === "ping" ? null : !data ? (
-        <Skeleton className="h-64 w-full" />
-      ) : failed ? (
-        <div className="py-8 text-center text-xs text-destructive">
-          {failed}{" "}
-          <button onClick={retry} className="ml-1 underline cursor-pointer">
-            Retry
-          </button>
-        </div>
-      ) : metricRows.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{t("noChartData")}</p>
-      ) : (
-        <div className={cn("transition-opacity", loading && "opacity-50")}>
-          {chart === "cpu" ? (
-            <Panel title={t("colCpu")}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metricRows}>
-                  <CartesianGrid className="stroke-border" vertical={false} />
-                  <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis
-                    domain={[0, tops.cpu]}
-                    ticks={quarters(tops.cpu)}
-                    unit="%"
-                    width={Y_WIDTH}
-                    {...AXIS}
-                  />
-                  <Tooltip
-                    labelFormatter={label}
-                    formatter={(v) => [`${Number(v).toFixed(1)}%`, "CPU"]}
-                    contentStyle={TIP}
-                  />
-                  <Area
-                    dataKey="cpu"
-                    stroke="var(--color-chart-1)"
-                    fill="var(--color-chart-1)"
-                    fillOpacity={0.15}
-                    {...SERIES}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Panel>
-          ) : chart === "mem" ? (
-            <Panel title={`${t("colMem")} · ${bytes(node.mem_total)}`}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metricRows}>
-                  <CartesianGrid className="stroke-border" vertical={false} />
-                  <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis
-                    domain={[0, node.mem_total]}
-                    ticks={quarters(node.mem_total)}
-                    tickFormatter={axisBytes}
-                    width={Y_WIDTH}
-                    {...AXIS}
-                  />
-                  <Tooltip
-                    labelFormatter={label}
-                    formatter={(v) => bytes(Number(v))}
-                    contentStyle={TIP}
-                  />
-                  <Area
-                    dataKey="mem_used"
-                    name={t("colMem")}
-                    stroke="var(--color-chart-4)"
-                    fill="var(--color-chart-4)"
-                    fillOpacity={0.15}
-                    {...SERIES}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Panel>
-          ) : chart === "net" ? (
-            <Panel
-              title={
-                <>
-                  {t("colSpeed")}
-                  <span className="ml-3 text-chart-2">● RX</span>
-                  <span className="ml-2 text-chart-3">● TX</span>
-                </>
-              }
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={metricRows}>
-                  <CartesianGrid className="stroke-border" vertical={false} />
-                  <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis
-                    domain={[0, tops.rate]}
-                    ticks={quarters(tops.rate)}
-                    tickFormatter={axisBytes}
-                    unit="/s"
-                    width={Y_WIDTH}
-                    {...AXIS}
-                  />
-                  <Tooltip
-                    labelFormatter={label}
-                    formatter={(v) => rate(Number(v))}
-                    contentStyle={TIP}
-                  />
-                  <Line dataKey="net_rx" name="RX" stroke="var(--color-chart-2)" {...SERIES} />
-                  <Line dataKey="net_tx" name="TX" stroke="var(--color-chart-3)" {...SERIES} />
-                </LineChart>
-              </ResponsiveContainer>
-            </Panel>
-          ) : (
-            <Panel title={`${t("colDisk")} · ${bytes(node.disk_total)}`}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metricRows}>
-                  <CartesianGrid className="stroke-border" vertical={false} />
-                  <XAxis {...timeAxis(metricRows, hours)} />
-                  <YAxis
-                    domain={[0, node.disk_total]}
-                    ticks={quarters(node.disk_total)}
-                    tickFormatter={axisBytes}
-                    width={Y_WIDTH}
-                    {...AXIS}
-                  />
-                  <Tooltip
-                    labelFormatter={label}
-                    formatter={(v) => bytes(Number(v))}
-                    contentStyle={TIP}
-                  />
-                  <Area
-                    dataKey="disk_used"
-                    name={t("colDisk")}
-                    stroke="var(--color-chart-5)"
-                    fill="var(--color-chart-5)"
-                    fillOpacity={0.15}
-                    {...SERIES}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Panel>
-          )}
-        </div>
+      {chart !== "ping" && (
+        <MetricCharts uuid={node.uuid} node={node} chart={chart} hours={hours} />
       )}
 
       {(chart === "ping" || known === undefined) && (
-        <div hidden={chart !== "ping"}>
-          <Latency uuid={node.uuid} hours={hours} className="h-64" onKnown={learn} />
+        <div hidden={chart !== "ping"} className="flex-1 min-h-[400px]">
+          <Latency
+            uuid={node.uuid}
+            hours={hours}
+            className="h-full min-h-[380px]"
+            onKnown={learn}
+          />
         </div>
       )}
     </div>

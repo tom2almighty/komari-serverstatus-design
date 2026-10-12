@@ -1,6 +1,6 @@
-import { ChartLine, ExternalLink, Infinity as InfinityIcon } from "lucide-react"
+import { Infinity as InfinityIcon } from "lucide-react"
 import { type ReactNode, useEffect, useMemo, useState } from "react"
-import { Latency } from "@/components/NodeDetail"
+import { Latency, MetricCharts } from "@/components/NodeDetail"
 import { Dot, OsIcon } from "@/components/NodeMarks"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -17,10 +17,9 @@ import {
   uptime,
   virtName,
 } from "@/lib/format"
-import { fetchHistory, latencyWindow } from "@/lib/history"
+import { fetchHistory, latencyWindow, RANGES } from "@/lib/history"
 import { useI18n } from "@/lib/i18n"
 import { knownPing, recordPing } from "@/lib/pings"
-import { Link } from "@/lib/route"
 import { cn } from "@/lib/utils"
 
 function Block({
@@ -33,8 +32,8 @@ function Block({
   children: ReactNode
 }) {
   return (
-    <section className="min-w-0 max-w-full overflow-hidden rounded-lg border bg-card p-3 sm:p-3.5 text-card-foreground shadow-xs">
-      <div className="mb-2.5 flex items-center justify-between gap-2 border-b pb-2 text-xs font-semibold">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-md border border-border bg-card p-3 sm:p-3.5 text-card-foreground shadow-xs">
+      <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-border/80 pb-2 text-xs font-semibold">
         <span className="truncate text-foreground">{title}</span>
         {aside}
       </div>
@@ -112,18 +111,7 @@ function Overview({ node }: { node: Node }) {
       </Block>
 
       {/* 2. 资源监控 */}
-      <Block
-        title={t("detailResources")}
-        aside={
-          <Link
-            href={`/node/${node.uuid}`}
-            className="inline-flex items-center gap-1 text-2xs font-medium text-primary hover:underline shrink-0"
-          >
-            <ChartLine className="size-3" />
-            <span>{t("viewCharts")}</span>
-          </Link>
-        }
-      >
+      <Block title={t("detailResources")}>
         {m && <Line label={t("colCpu")}>{m.cpu.toFixed(1)}%</Line>}
         <Line label={t("colMem")}>
           {m
@@ -215,15 +203,6 @@ function Overview({ node }: { node: Node }) {
           )}
         </Line>
         {node.remark && <Line label="Remark">{node.remark}</Line>}
-        <div className="pt-2">
-          <Link
-            href={`/node/${node.uuid}`}
-            className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <span>{t("viewCharts")}</span>
-            <ExternalLink className="size-3" />
-          </Link>
-        </div>
       </Block>
     </div>
   )
@@ -232,7 +211,8 @@ function Overview({ node }: { node: Node }) {
 export function RowDetails({ node }: { node: Node }) {
   const { t } = useI18n()
   const [learned, setLearned] = useState<boolean | null>(() => knownPing(node.uuid) ?? null)
-  const [tab, setTab] = useState<string>("latency")
+  const [tab, setTab] = useState<string>("overview")
+  const [hours, setHours] = useState<number>(6)
   const isConfigured = node.cpu_cores > 0 || node.mem_total > 0
 
   useEffect(() => {
@@ -259,33 +239,38 @@ export function RowDetails({ node }: { node: Node }) {
   }
 
   const tabs = [
-    { value: "latency", label: t("detailPingHistory") },
     { value: "overview", label: t("detailSpecs") },
+    ...(learned !== false ? [{ value: "latency", label: t("detailPingHistory") }] : []),
+    { value: "cpu", label: t("colCpu") },
+    { value: "mem", label: t("colMem") },
+    { value: "net", label: t("colSpeed") },
+    { value: "disk", label: t("colDisk") },
   ]
 
-  const shown = learned === false ? "overview" : tab
+  const isChartTab = ["cpu", "mem", "net", "disk"].includes(tab)
 
   return (
     <div className="@container w-full max-w-full overflow-hidden min-w-0 space-y-2.5 px-0.5 py-0.5 text-sm">
-      {learned !== false && (
-        <div className="flex items-center justify-between pb-1 min-w-0">
-          <Segmented value={shown} onChange={setTab} options={tabs} label="Details View" />
-          <Link
-            href={`/node/${node.uuid}`}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground shrink-0"
-          >
-            <span>{t("viewCharts")}</span>
-            <ExternalLink className="size-3" />
-          </Link>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-1 min-w-0">
+        <Segmented value={tab} onChange={setTab} options={tabs} label="Details View" />
+        {isChartTab && (
+          <Segmented
+            value={hours}
+            onChange={setHours}
+            options={RANGES.map((r) => ({ value: r.hours, label: t(r.labelKey) }))}
+            label="Time Range"
+          />
+        )}
+      </div>
 
-      {shown === "latency" ? (
-        <div className="w-full max-w-full min-w-0 overflow-hidden rounded-lg border bg-card p-3 shadow-xs">
+      {tab === "overview" ? (
+        <Overview node={node} />
+      ) : tab === "latency" ? (
+        <div className="w-full max-w-full min-w-0 overflow-hidden rounded-md border border-border bg-card p-3 shadow-xs">
           <Latency uuid={node.uuid} className="h-65 w-full min-w-0" onKnown={setLearned} />
         </div>
       ) : (
-        <Overview node={node} />
+        <MetricCharts uuid={node.uuid} node={node} chart={tab} hours={hours} />
       )}
     </div>
   )

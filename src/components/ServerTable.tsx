@@ -1,9 +1,9 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Search, X } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from "lucide-react"
 import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { RowDetails } from "@/components/RowDetails"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -52,24 +52,24 @@ function ProgressBar({
   const tone =
     safe === null
       ? "bg-muted-foreground/30"
-      : safe >= 85
-        ? "bg-destructive/85"
-        : safe >= 70
-          ? "bg-warning/85"
-          : "bg-success/85"
+      : safe >= 90
+        ? "bg-destructive text-destructive-foreground"
+        : safe >= 80
+          ? "bg-warning text-warning-foreground"
+          : "bg-success text-success-foreground"
   return (
     <div
       title={title}
-      className="relative w-full h-4.5 md:h-5 rounded-xs bg-muted/70 dark:bg-muted/40 overflow-hidden flex items-center justify-center select-none"
+      className="relative w-full h-5 overflow-hidden rounded bg-muted/70 dark:bg-muted/40 shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)] @max-3xl:h-4"
     >
       {safe !== null && (
         <div
-          className={cn("absolute inset-y-0 left-0 transition-[width] duration-300", tone)}
+          className={cn("h-full rounded-l-[3px] transition-[width] duration-500", tone)}
           style={{ width: `${safe}%` }}
         />
       )}
-      <span className="relative z-10 text-2xs md:text-xs font-semibold tabular-nums text-foreground leading-none drop-shadow-2xs">
-        {label ?? (safe !== null ? `${safe.toFixed(0)}%` : "—")}
+      <span className="tabular-nums absolute inset-y-0 left-1.5 flex items-center text-[10px] leading-none text-foreground font-medium @max-3xl:left-0.5 @max-3xl:text-[8px]">
+        {label ?? (safe !== null ? `${safe.toFixed(1)}%` : "—")}
       </span>
     </div>
   )
@@ -83,12 +83,12 @@ function SpeedCell({ m, online }: { m: Metrics | null; online: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center gap-0.5 leading-none text-2xs md:text-xs">
       <span className="tnum inline-flex items-center gap-0.5 text-muted-foreground">
-        <span className="text-success font-semibold text-2xs leading-none">↓</span>
-        <span className="font-medium text-foreground">{compact(m.net_rx)}/s</span>
-      </span>
-      <span className="tnum inline-flex items-center gap-0.5 text-muted-foreground">
         <span className="text-info font-semibold text-2xs leading-none">↑</span>
         <span className="font-medium text-foreground">{compact(m.net_tx)}/s</span>
+      </span>
+      <span className="tnum inline-flex items-center gap-0.5 text-muted-foreground">
+        <span className="text-success font-semibold text-2xs leading-none">↓</span>
+        <span className="font-medium text-foreground">{compact(m.net_rx)}/s</span>
       </span>
     </div>
   )
@@ -117,26 +117,25 @@ function TrafficCell({ node }: { node: Node }) {
 /**
  * Strict column percentage definitions that sum to 100% on both mobile (9 columns) and desktop (11 columns).
  * Traffic sits last on both breakpoints; mobile hides os and uptime (2 columns).
- * Mobile retains: status(7%), name(19%), location(6%), load(8%), speed(14%), cpu(11.5%), mem(11.5%), disk(11.5%), traffic(11.5%) = 100%
+ * Mobile hides: os, uptime, location, load (4 columns hidden on mobile, 7 columns shown).
+ * Mobile retains: status(8%), name(26%), speed(18%), cpu(12%), mem(12%), disk(12%), traffic(12%) = 100%
  * Desktop displays all 11:
  * status(4%), name(22%), os(9%), location(7%), uptime(7%), load(6%), speed(14%), cpu(7.66%), mem(7.67%), disk(7.67%), traffic(8%) = 100%
  */
 const COL_CLASSES = {
-  status: "w-[7%] md:w-[4%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  name: "w-[19%] md:w-[22%] px-0.5 py-1.5 md:px-2 md:py-2 text-left overflow-hidden align-middle",
-  os: "hidden md:table-cell md:w-[9%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+  status: "w-[8%] md:w-[4%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  name: "w-[26%] md:w-[22%] px-1 py-1 md:px-1.5 md:py-1 text-left overflow-hidden align-middle",
+  os: "hidden md:table-cell md:w-[9%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
   location:
-    "w-[6%] md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+    "hidden md:table-cell md:w-[7%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
   uptime:
-    "hidden md:table-cell md:w-[7%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  load: "w-[8%] md:w-[6%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  speed:
-    "w-[14%] md:w-[14%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  cpu: "w-[11.5%] md:w-[7.66%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  mem: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  disk: "w-[11.5%] md:w-[7.67%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
-  traffic:
-    "w-[11.5%] md:w-[8%] px-0.5 py-1.5 md:px-2 md:py-2 text-center overflow-hidden align-middle",
+    "hidden md:table-cell md:w-[7%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  load: "hidden md:table-cell md:w-[6%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  speed: "w-[18%] md:w-[14%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  cpu: "w-[12%] md:w-[7.66%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  mem: "w-[12%] md:w-[7.67%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  disk: "w-[12%] md:w-[7.67%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  traffic: "w-[12%] md:w-[8%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
 }
 
 type SortField =
@@ -211,7 +210,7 @@ function sortNodes(nodes: Node[], field: SortField | null, order: SortOrder): No
   })
 }
 
-function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
+function Row({ node, index, isDesktop }: { node: Node; index: number; isDesktop: boolean }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const m = node.online ? node.metrics : null
@@ -219,6 +218,7 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
   const cpu = m ? m.cpu : null
   const mem = m ? percent(m.mem_used, m.mem_total) : null
   const disk = m ? percent(m.disk_used, m.disk_total) : null
+  const shade = index % 2 ? "bg-muted/40" : ""
 
   return (
     <>
@@ -229,11 +229,11 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
           (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen((o) => !o))
         }
         className={cn(
-          "km-ui-table-row cursor-pointer select-none transition-colors hover:bg-muted/50",
-          open && "bg-muted/30 hover:bg-muted/40",
+          "km-ui-table-row cursor-pointer select-none transition-colors hover:bg-accent/80",
+          shade,
+          open && "bg-muted/70 hover:bg-muted/80",
         )}
       >
-        {/* 1. 状态 */}
         <TableCell className={COL_CLASSES.status}>
           <div className="flex items-center justify-center">
             <Dot node={node} />
@@ -242,17 +242,9 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
 
         {/* 2. 节点名称 */}
         <TableCell className={COL_CLASSES.name} title={node.name}>
-          <div className="flex items-center gap-1 md:gap-1.5 min-w-0">
-            <ChevronRight
-              className={cn(
-                "size-3 md:size-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
-                open && "rotate-90 text-foreground",
-              )}
-            />
-            <span className="min-w-0 flex-1 truncate font-medium text-foreground text-xs md:text-sm">
-              {node.name}
-            </span>
-          </div>
+          <span className="block truncate font-medium text-foreground text-xs md:text-sm">
+            {node.name}
+          </span>
         </TableCell>
 
         {/* 3. 系统平台 (小屏隐藏) */}
@@ -321,10 +313,10 @@ function Row({ node, isDesktop }: { node: Node; isDesktop: boolean }) {
         </TableCell>
       </TableRow>
 
-      {/* 展开详细信息行：严格匹配当前视口可见列数 (移动端 9 列，桌面端 11 列)，绝对不挤压或重排父表格 */}
+      {/* 展开详细信息行：严格匹配当前视口可见列数 (移动端 7 列，桌面端 11 列)，绝对不挤压或重排父表格 */}
       {open && (
         <TableRow className="bg-muted/15 hover:bg-muted/15">
-          <TableCell colSpan={isDesktop ? 11 : 9} className="p-0 text-left whitespace-normal">
+          <TableCell colSpan={isDesktop ? 11 : 7} className="p-0 text-left whitespace-normal">
             <div className="w-full max-w-full min-w-0 overflow-hidden p-2.5 sm:p-3.5 bg-muted/20 border-b">
               <RowDetails node={node} />
             </div>
@@ -453,79 +445,80 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
 
   return (
     <div className="km-instance-server-list w-full space-y-3 sm:space-y-4">
-      {/* 顶部工具栏：分组选择器与搜索框 */}
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tabs.map((tab) => {
-            const active = selectedGroup === tab.value
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => setSelectedGroup(tab.value)}
-                className={cn(
-                  "inline-flex h-7 sm:h-8 items-center gap-1.5 rounded-md px-2.5 sm:px-3 text-xs font-medium transition-colors cursor-pointer select-none",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                <span>{tab.label}</span>
-                <span
+      {/* 服务器列表卡片：带有与内部表格拉开距离的整体外边距/内边距 */}
+      <Card className="km-node-card rounded-md border border-border bg-card p-3 sm:p-5 text-card-foreground shadow-sm">
+        {/* 顶部工具栏：分组选择器与搜索框 */}
+        <div className="mb-3 sm:mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between px-0.5 min-w-0">
+          <div className="inline-flex h-auto max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground overflow-x-auto">
+            {tabs.map((tab) => {
+              const active = selectedGroup === tab.value
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setSelectedGroup(tab.value)}
                   className={cn(
-                    "tnum rounded-full px-1.5 py-0.2 text-2xs",
+                    "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 sm:px-3 text-xs font-medium whitespace-nowrap transition-all cursor-pointer select-none",
                     active
-                      ? "bg-primary-foreground/20 text-primary-foreground"
-                      : "bg-background/80 text-muted-foreground",
+                      ? "bg-background text-foreground shadow-xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {tab.count}
-                </span>
+                  <span>{tab.label}</span>
+                  <span
+                    className={cn(
+                      "tnum rounded-full px-1.5 py-0.2 text-2xs",
+                      active
+                        ? "bg-muted text-foreground"
+                        : "bg-background/50 text-muted-foreground",
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="relative w-full sm:w-64 shrink-0">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 sm:size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="km-ui-input pl-8 pr-8 text-xs h-7 sm:h-8"
+            />
+            {filter && (
+              <button
+                type="button"
+                onClick={() => setFilter("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="size-3.5" />
               </button>
-            )
-          })}
+            )}
+          </div>
         </div>
 
-        <div className="relative w-full sm:w-64 shrink-0">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 sm:size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder={t("searchPlaceholder")}
-            className="km-ui-input pl-8 pr-8 text-xs h-7 sm:h-8"
-          />
-          {filter && (
-            <button
-              type="button"
-              onClick={() => setFilter("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <X className="size-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 数据表格卡片：百分比固定列宽 + 移动端9列/桌面端11列，完全不横向滚动 */}
-      <Card className="km-node-card overflow-hidden">
-        <CardContent className="p-0">
+        {/* 数据表格：百分比固定列宽 + 移动端9列/桌面端11列，完全不横向滚动 */}
+        <div className="relative w-full overflow-hidden">
           <Table
-            className="km-ui-table table-fixed w-full text-xs"
+            className="km-ui-table table-fixed w-full text-center text-xs md:text-sm [&_tbody_tr]:h-8 sm:[&_tbody_tr]:h-[30px]"
             containerClassName="relative w-full overflow-hidden"
           >
             {/* 使用 colgroup 锁死列宽百分比模型 */}
             <colgroup>
-              <col className="w-[7%] md:w-[4%]" />
-              <col className="w-[19%] md:w-[22%]" />
+              <col className="w-[8%] md:w-[4%]" />
+              <col className="w-[26%] md:w-[22%]" />
               <col className="hidden md:table-column md:w-[9%]" />
-              <col className="w-[6%] md:w-[7%]" />
               <col className="hidden md:table-column md:w-[7%]" />
-              <col className="w-[8%] md:w-[6%]" />
-              <col className="w-[14%] md:w-[14%]" />
-              <col className="w-[11.5%] md:w-[7.66%]" />
-              <col className="w-[11.5%] md:w-[7.67%]" />
-              <col className="w-[11.5%] md:w-[7.67%]" />
-              <col className="w-[11.5%] md:w-[8%]" />
+              <col className="hidden md:table-column md:w-[7%]" />
+              <col className="hidden md:table-column md:w-[6%]" />
+              <col className="w-[18%] md:w-[14%]" />
+              <col className="w-[12%] md:w-[7.66%]" />
+              <col className="w-[12%] md:w-[7.67%]" />
+              <col className="w-[12%] md:w-[7.67%]" />
+              <col className="w-[12%] md:w-[8%]" />
             </colgroup>
 
             <TableHeader>
@@ -621,18 +614,20 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
               {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={isDesktop ? 11 : 9}
+                    colSpan={isDesktop ? 11 : 7}
                     className="h-28 text-center text-muted-foreground text-sm"
                   >
                     {t("noNodes")}
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((node) => <Row key={node.uuid} node={node} isDesktop={isDesktop} />)
+                filtered.map((node, index) => (
+                  <Row key={node.uuid} node={node} index={index} isDesktop={isDesktop} />
+                ))
               )}
             </TableBody>
           </Table>
-        </CardContent>
+        </div>
       </Card>
     </div>
   )
@@ -641,24 +636,24 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
 export function ServerTableSkeleton() {
   const isDesktop = useIsDesktop()
   return (
-    <Card className="km-node-card overflow-hidden">
-      <CardContent className="p-0">
+    <Card className="km-node-card rounded-md border border-border bg-card p-3 sm:p-5 text-card-foreground shadow-sm">
+      <div className="relative w-full overflow-hidden">
         <Table
           className="km-ui-table table-fixed w-full text-xs"
           containerClassName="relative w-full overflow-hidden"
         >
           <colgroup>
-            <col className="w-[7%] md:w-[4%]" />
-            <col className="w-[19%] md:w-[22%]" />
+            <col className="w-[8%] md:w-[4%]" />
+            <col className="w-[26%] md:w-[22%]" />
             <col className="hidden md:table-column md:w-[9%]" />
-            <col className="w-[6%] md:w-[7%]" />
             <col className="hidden md:table-column md:w-[7%]" />
-            <col className="w-[8%] md:w-[6%]" />
-            <col className="w-[14%] md:w-[14%]" />
-            <col className="w-[11.5%] md:w-[7.66%]" />
-            <col className="w-[11.5%] md:w-[7.67%]" />
-            <col className="w-[11.5%] md:w-[7.67%]" />
-            <col className="w-[11.5%] md:w-[8%]" />
+            <col className="hidden md:table-column md:w-[7%]" />
+            <col className="hidden md:table-column md:w-[6%]" />
+            <col className="w-[18%] md:w-[14%]" />
+            <col className="w-[12%] md:w-[7.66%]" />
+            <col className="w-[12%] md:w-[7.67%]" />
+            <col className="w-[12%] md:w-[7.67%]" />
+            <col className="w-[12%] md:w-[8%]" />
           </colgroup>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -700,14 +695,14 @@ export function ServerTableSkeleton() {
           <TableBody>
             {Array.from({ length: 6 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={isDesktop ? 11 : 9} className="p-3">
+                <TableCell colSpan={isDesktop ? 11 : 7} className="p-3">
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </CardContent>
+      </div>
     </Card>
   )
 }

@@ -2,7 +2,7 @@ const UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
 /** Ten years; past this an expiry date is a stand-in for "permanent". */
 export const FOREVER_DAYS = 3650
-
+export const FOREVER = "∞"
 const unitOf = (n: number) => Math.min(Math.floor(Math.log(n) / Math.log(1024)), UNITS.length - 1)
 
 export function bytes(n: number, digits?: number): string {

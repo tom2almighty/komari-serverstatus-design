@@ -20,8 +20,8 @@ export function NodePicker({ nodes, selected }: { nodes: Node[]; selected: strin
     : nodes
 
   return (
-    <aside className="flex min-h-0 flex-col gap-3 rounded-lg border bg-card p-3 text-card-foreground shadow-xs @3xl:sticky @3xl:top-18 @3xl:max-h-[calc(100svh-6rem)]">
-      <div className="relative">
+    <aside className="flex h-full min-h-0 flex-col gap-3 rounded-md border bg-card p-3 text-card-foreground shadow-xs">
+      <div className="relative shrink-0">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"

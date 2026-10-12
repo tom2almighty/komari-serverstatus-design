@@ -1,36 +1,23 @@
 import {
   Activity,
-  ChartLine,
   Check,
   Globe,
   Monitor,
   Moon,
   Palette,
   RotateCcw,
-  Server,
   Settings,
   Sun,
 } from "lucide-react"
-import {
-  type CSSProperties,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react"
-import { NodeDetail } from "@/components/NodeDetail"
-import { NodePicker } from "@/components/NodePicker"
+import { type CSSProperties, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { ServerTable, ServerTableSkeleton } from "@/components/ServerTable"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { SEGMENT, Segmented } from "@/components/ui/segmented"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Segmented } from "@/components/ui/segmented"
 import { api, type PublicSettings, useNodes } from "@/lib/api"
 import { I18nProvider, useI18n } from "@/lib/i18n"
-import { Link, useAppRoute } from "@/lib/route"
+import { Link } from "@/lib/route"
 import {
   applyTheme,
   clampPageWidth,
@@ -326,7 +313,6 @@ function MainApp() {
   const admin = useAdmin()
   const rpcTransport = String(publicInfo?.theme_settings?.rpcTransport ?? "WebSocket")
   const { nodes, error, loading } = useNodes(rpcTransport)
-  const route = useAppRoute()
   const { mode, dark, choose } = useTheme()
 
   useEffect(() => {
@@ -346,20 +332,6 @@ function MainApp() {
     defaultRadius,
   )
 
-  const selectedNodeUuid = useMemo(() => {
-    if (route.nodeUuid) return route.nodeUuid
-    if (nodes && nodes.length > 0) {
-      const firstOnline = nodes.find((n) => n.online)
-      return firstOnline ? firstOnline.uuid : nodes[0].uuid
-    }
-    return null
-  }, [route.nodeUuid, nodes])
-
-  const selectedNode = useMemo(() => {
-    if (!selectedNodeUuid || !nodes) return null
-    return nodes.find((n) => n.uuid === selectedNodeUuid) ?? null
-  }, [selectedNodeUuid, nodes])
-
   const modes = [
     { value: "light" as const, label: <Sun className="size-3.5" />, title: t("appearanceLight") },
     {
@@ -370,15 +342,13 @@ function MainApp() {
     { value: "dark" as const, label: <Moon className="size-3.5" />, title: t("appearanceDark") },
   ]
 
-  const activeTab = route.tab
-
   return (
     <div
       className="km-layout relative flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-primary/20"
       style={{ "--page-max": `${pageWidth}px` } as CSSProperties}
     >
       <header className="km-navbar sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
-        <div className="@container mx-auto flex h-14 max-w-(--page-max) flex-nowrap items-center justify-between gap-2 px-3 sm:px-6">
+        <div className="@container mx-auto flex h-14 w-[95vw] max-w-(--page-max) flex-nowrap items-center justify-between gap-2 px-2 sm:px-4">
           <div className="flex min-w-0 shrink items-center gap-2 sm:gap-4">
             <Link
               href="/"
@@ -391,27 +361,6 @@ function MainApp() {
                 {siteTitle}
               </h1>
             </Link>
-
-            {/* Top navigation: the same trough as the radio groups below, as links
-                so a middle click still opens a tab. */}
-            <div className={cn(SEGMENT.list, "shrink-0")}>
-              <Link
-                href="/"
-                aria-current={activeTab === "servers" ? "page" : undefined}
-                className={cn(SEGMENT.item, activeTab === "servers" ? SEGMENT.on : SEGMENT.off)}
-              >
-                <Server />
-                <span className="hidden @md:inline">{t("tabServers")}</span>
-              </Link>
-              <Link
-                href={selectedNodeUuid ? `/node/${selectedNodeUuid}` : "/charts"}
-                aria-current={activeTab === "charts" ? "page" : undefined}
-                className={cn(SEGMENT.item, activeTab === "charts" ? SEGMENT.on : SEGMENT.off)}
-              >
-                <ChartLine />
-                <span className="hidden @md:inline">{t("tabCharts")}</span>
-              </Link>
-            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -469,50 +418,27 @@ function MainApp() {
       </header>
 
       {announcement && (
-        <div className="mx-auto max-w-(--page-max) px-3 pt-4 sm:px-6">
+        <div className="mx-auto w-[95vw] max-w-(--page-max) px-2 pt-4 sm:px-4">
           <div className="rounded-lg border bg-muted/30 p-3 text-sm text-foreground/90">
             {announcement}
           </div>
         </div>
       )}
 
-      <main className="km-main @container mx-auto w-full max-w-(--page-max) flex-1 space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6">
+      <main className="km-main @container mx-auto w-[95vw] max-w-(--page-max) flex-1 space-y-4 px-2 py-4 sm:px-4 sm:py-5">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
-        {activeTab === "charts" ? (
-          <div className="flex w-full flex-col gap-6 @3xl:flex-row">
-            <div className="@3xl:w-64 @3xl:shrink-0">
-              {nodes ? (
-                <NodePicker nodes={nodes} selected={selectedNodeUuid || ""} />
-              ) : (
-                <Skeleton className="h-64 w-full rounded-lg" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              {selectedNode ? (
-                <Suspense fallback={<Skeleton className="h-120 w-full rounded-lg" />}>
-                  <NodeDetail node={selectedNode} />
-                </Suspense>
-              ) : loading ? (
-                <Skeleton className="h-120 w-full rounded-lg" />
-              ) : (
-                <p className="py-12 text-center text-sm text-muted-foreground">{t("noNodes")}</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="w-full">
-            {loading && !nodes ? (
-              <ServerTableSkeleton />
-            ) : nodes ? (
-              <ServerTable nodes={nodes} />
-            ) : null}
-          </div>
-        )}
+        <div className="w-full">
+          {loading && !nodes ? (
+            <ServerTableSkeleton />
+          ) : nodes ? (
+            <ServerTable nodes={nodes} />
+          ) : null}
+        </div>
       </main>
 
       <footer className="km-footer mt-auto shrink-0 border-t py-3.5 text-center text-xs text-muted-foreground">
