@@ -252,7 +252,13 @@ export function RowDetails({ node }: { node: Node }) {
   return (
     <div className="@container w-full max-w-full overflow-hidden min-w-0 space-y-2.5 px-0.5 py-0.5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-1 min-w-0">
-        <Segmented value={tab} onChange={setTab} options={tabs} label="Details View" />
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={tabs}
+          label="Details View"
+          className="max-w-full min-w-0 overflow-x-auto"
+        />
         {isChartTab && (
           <Segmented
             value={hours}

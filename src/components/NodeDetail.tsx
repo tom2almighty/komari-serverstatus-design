@@ -185,8 +185,6 @@ export function Latency({
   onKnown?: (has: boolean) => void
 }) {
   const { t } = useI18n()
-  const isDesktop = useIsDesktop()
-  const yWidth = isDesktop ? 44 : 24
   const [picked, setPicked] = usePref<number>("latency-hours", LATENCY_HOURS)
   const hours = fixed ?? (inRanges(picked) ? picked : LATENCY_HOURS)
   const { data, failed, loading, retry } = useHistory(uuid, hours, "ping")
@@ -313,7 +311,7 @@ export function Latency({
           <LineChart data={chartRows}>
             <CartesianGrid className="stroke-border" vertical={false} />
             <XAxis {...timeAxis(chartRows, hours)} />
-            <YAxis unit="ms" width={yWidth} allowDecimals={false} {...AXIS} />
+            <YAxis unit="ms" width="auto" allowDecimals={false} {...AXIS} />
             <Tooltip
               labelFormatter={label}
               formatter={(v) => `${Math.round(Number(v))} ms`}
@@ -390,7 +388,6 @@ export function MetricCharts({
 }) {
   const { t } = useI18n()
   const isDesktop = useIsDesktop()
-  const yWidth = isDesktop ? 54 : 26
   const formatBytesAxis = (v: number) => (isDesktop ? axisBytes(v) : compact(v))
   const { data, failed, loading, retry } = useHistory(uuid, hours, "metrics")
 
@@ -456,7 +453,7 @@ export function MetricCharts({
                   domain={[0, tops.cpu]}
                   ticks={quarters(tops.cpu)}
                   unit="%"
-                  width={yWidth}
+                  width="auto"
                   {...AXIS}
                 />
                 <Tooltip
@@ -488,7 +485,7 @@ export function MetricCharts({
                   domain={[0, memTotal || "auto"]}
                   ticks={memTotal ? quarters(memTotal) : undefined}
                   tickFormatter={formatBytesAxis}
-                  width={yWidth}
+                  width="auto"
                   {...AXIS}
                 />
                 <Tooltip
@@ -528,7 +525,7 @@ export function MetricCharts({
                   ticks={quarters(tops.rate)}
                   tickFormatter={formatBytesAxis}
                   unit={isDesktop ? "/s" : ""}
-                  width={yWidth}
+                  width="auto"
                   {...AXIS}
                 />
                 <Tooltip
@@ -565,7 +562,7 @@ export function MetricCharts({
                   domain={[0, diskTotal || "auto"]}
                   ticks={diskTotal ? quarters(diskTotal) : undefined}
                   tickFormatter={formatBytesAxis}
-                  width={yWidth}
+                  width="auto"
                   {...AXIS}
                 />
                 <Tooltip
@@ -595,7 +592,7 @@ export function MetricCharts({
                 domain={[0, tops.cpu]}
                 ticks={quarters(tops.cpu)}
                 unit="%"
-                width={yWidth}
+                width="auto"
                 {...AXIS}
               />
               <Tooltip
@@ -623,7 +620,7 @@ export function MetricCharts({
                 domain={[0, memTotal || "auto"]}
                 ticks={memTotal ? quarters(memTotal) : undefined}
                 tickFormatter={formatBytesAxis}
-                width={yWidth}
+                width="auto"
                 {...AXIS}
               />
               <Tooltip
@@ -653,7 +650,7 @@ export function MetricCharts({
                 ticks={quarters(tops.rate)}
                 tickFormatter={formatBytesAxis}
                 unit={isDesktop ? "/s" : ""}
-                width={yWidth}
+                width="auto"
                 {...AXIS}
               />
               <Tooltip
@@ -681,7 +678,7 @@ export function MetricCharts({
                 domain={[0, diskTotal || "auto"]}
                 ticks={diskTotal ? quarters(diskTotal) : undefined}
                 tickFormatter={formatBytesAxis}
-                width={yWidth}
+                width="auto"
                 {...AXIS}
               />
               <Tooltip

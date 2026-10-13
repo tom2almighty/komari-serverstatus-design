@@ -3,6 +3,8 @@ import { useMemo, useState, useSyncExternalStore } from "react"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { RowDetails } from "@/components/RowDetails"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -137,6 +139,13 @@ const COL_CLASSES = {
   disk: "w-[12%] md:w-[7.67%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
   traffic: "w-[12%] md:w-[8%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
 }
+
+/**
+ * 排序方向标。窄屏下 cpu/mem/disk 列只有 30 余像素，方向标放进文字流会把「CPU」「RAM」
+ * 挤成「C…」，所以移动端把它钉在表头单元格右上角，桌面端回到标签右侧。
+ */
+const SORT_CARET =
+  "absolute top-0.5 right-0.5 size-2 text-primary md:static md:top-auto md:right-auto md:size-3 md:ml-0.5 md:shrink-0"
 
 type SortField =
   | "name"
@@ -347,7 +356,7 @@ function SortableHead({
   const active = sortField === field
 
   return (
-    <TableHead className={className}>
+    <TableHead className={cn(className, "relative")}>
       <button
         type="button"
         onClick={() => onSort(field)}
@@ -368,9 +377,9 @@ function SortableHead({
         </span>
         {active ? (
           sortOrder === "asc" ? (
-            <ArrowUp className="size-2.5 md:size-3 shrink-0 text-primary ml-0.5" />
+            <ArrowUp className={SORT_CARET} />
           ) : (
-            <ArrowDown className="size-2.5 md:size-3 shrink-0 text-primary ml-0.5" />
+            <ArrowDown className={SORT_CARET} />
           )
         ) : (
           <ArrowUpDown className="hidden md:inline-block size-2.5 shrink-0 opacity-40 ml-0.5" />
@@ -449,33 +458,36 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
       <Card className="km-node-card rounded-md border border-border bg-card p-3 sm:p-5 text-card-foreground shadow-sm">
         {/* 顶部工具栏：分组选择器与搜索框 */}
         <div className="mb-3 sm:mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between px-0.5 min-w-0">
-          <div className="inline-flex h-auto max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground overflow-x-auto">
+          {/* 分组筛选：一组可切换的按钮，选中态用实心次级底色，未选中保持幽灵态 */}
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {tabs.map((tab) => {
               const active = selectedGroup === tab.value
               return (
-                <button
+                <Button
                   key={tab.value}
                   type="button"
+                  size="sm"
+                  variant={active ? "secondary" : "ghost"}
+                  aria-pressed={active}
                   onClick={() => setSelectedGroup(tab.value)}
                   className={cn(
-                    "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 sm:px-3 text-xs font-medium whitespace-nowrap transition-all cursor-pointer select-none",
+                    "h-7 gap-1.5 px-2.5 sm:h-8 sm:px-3 text-xs font-medium",
                     active
-                      ? "bg-background text-foreground shadow-xs font-semibold"
+                      ? "font-semibold text-foreground shadow-xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <span>{tab.label}</span>
-                  <span
+                  <span className="truncate">{tab.label}</span>
+                  <Badge
+                    variant="secondary"
                     className={cn(
-                      "tnum rounded-full px-1.5 py-0.2 text-2xs",
-                      active
-                        ? "bg-muted text-foreground"
-                        : "bg-background/50 text-muted-foreground",
+                      "tnum h-4 min-w-4 px-1 text-2xs",
+                      active ? "bg-background text-foreground" : "bg-muted text-muted-foreground",
                     )}
                   >
                     {tab.count}
-                  </span>
-                </button>
+                  </Badge>
+                </Button>
               )
             })}
           </div>
