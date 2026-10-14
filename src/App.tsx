@@ -118,6 +118,8 @@ function MainApp() {
   const pageWidth = clampPageWidth(Number(publicInfo?.theme_settings?.max_width))
   const announcement = String(publicInfo?.theme_settings?.announcement ?? "")
   const siteTitle = publicInfo?.sitename || t("siteTitle")
+  const onlineCount = nodes ? nodes.filter((n) => n.online).length : 0
+  const totalCount = nodes ? nodes.length : 0
 
   const modes = [
     { value: "light" as const, label: <Sun className="size-3.5" />, title: t("appearanceLight") },
@@ -134,18 +136,28 @@ function MainApp() {
       className="km-layout relative flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-primary/20"
       style={{ "--page-max": `${pageWidth}px` } as CSSProperties}
     >
-      <header className="km-navbar sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
-        <div className="@container mx-auto flex h-14 w-[95vw] max-w-(--page-max) flex-nowrap items-center justify-between gap-2 px-2 sm:px-4">
-          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-4">
+      <header className="km-navbar sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 w-full max-w-(--page-max) items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="flex min-w-0 shrink items-center gap-2.5 sm:gap-3">
             <Link
               href="/"
-              className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-85"
+              className="flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-85"
             >
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
                 <Activity className="size-4" />
               </div>
-              <h1 className="truncate text-sm font-semibold tracking-tight">{siteTitle}</h1>
+              <h1 className="truncate text-sm font-semibold tracking-tight sm:text-base">
+                {siteTitle}
+              </h1>
             </Link>
+            {totalCount > 0 && (
+              <span className="hidden select-none items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-2xs text-muted-foreground sm:inline-flex">
+                <span className="size-1.5 rounded-full bg-success" />
+                <span className="tnum font-medium text-foreground">
+                  {onlineCount}/{totalCount}
+                </span>
+              </span>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -171,7 +183,7 @@ function MainApp() {
               size="sm"
               onClick={() => setLocale(locale === "zh-CN" ? "en" : "zh-CN")}
               title="Switch Language"
-              className="px-2 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <Globe className="size-3.5 mr-1" />
               {locale === "zh-CN" ? "EN" : "中"}
@@ -184,7 +196,7 @@ function MainApp() {
                 rel="noopener"
                 title={t("adminPanel")}
                 aria-label={t("adminPanel")}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <Settings className="size-4" />
               </a>
@@ -194,14 +206,14 @@ function MainApp() {
       </header>
 
       {announcement && (
-        <div className="mx-auto w-[95vw] max-w-(--page-max) px-2 pt-4 sm:px-4">
-          <div className="rounded-lg border bg-muted/30 p-3 text-sm text-foreground/90">
+        <div className="mx-auto w-full max-w-(--page-max) px-4 pt-4 sm:px-6">
+          <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-sm text-foreground/90">
             {announcement}
           </div>
         </div>
       )}
 
-      <main className="km-main @container mx-auto w-[95vw] max-w-(--page-max) flex-1 space-y-4 px-2 py-4 sm:px-4 sm:py-5">
+      <main className="km-main mx-auto w-full max-w-(--page-max) flex-1 space-y-4 px-4 py-4 sm:px-6 sm:py-6">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
@@ -217,8 +229,8 @@ function MainApp() {
         </div>
       </main>
 
-      <footer className="km-footer mt-auto shrink-0 border-t py-3.5 text-center text-xs text-muted-foreground">
-        <div className="mx-auto flex max-w-(--page-max) flex-col items-center justify-center gap-1 px-3 sm:flex-row sm:gap-3 sm:px-6">
+      <footer className="km-footer mt-auto shrink-0 border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
+        <div className="mx-auto flex w-full max-w-(--page-max) flex-col items-center justify-center gap-1.5 px-4 sm:flex-row sm:gap-3 sm:px-6">
           <p>
             Powered by{" "}
             <a

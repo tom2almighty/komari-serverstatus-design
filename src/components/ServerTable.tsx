@@ -5,7 +5,6 @@ import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { RowDetails } from "@/components/RowDetails"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -453,194 +452,191 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
   ]
 
   return (
-    <div className="km-instance-server-list w-full space-y-3 sm:space-y-4">
-      {/* 服务器列表卡片：带有与内部表格拉开距离的整体外边距/内边距 */}
-      <Card className="km-node-card rounded-md border border-border bg-card p-3 sm:p-5 text-card-foreground shadow-sm">
-        {/* 顶部工具栏：分组选择器与搜索框 */}
-        <div className="mb-3 sm:mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between px-0.5 min-w-0">
-          {/* 分组筛选：一组可切换的按钮，选中态用实心次级底色，未选中保持幽灵态 */}
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            {tabs.map((tab) => {
-              const active = selectedGroup === tab.value
-              return (
-                <Button
-                  key={tab.value}
-                  type="button"
-                  size="sm"
-                  variant={active ? "secondary" : "ghost"}
-                  aria-pressed={active}
-                  onClick={() => setSelectedGroup(tab.value)}
+    <div className="km-instance-server-list w-full space-y-3">
+      {/* 顶部工具栏：分组选择器与搜索框（平铺无卡片外壳） */}
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between min-w-0">
+        {/* 分组筛选：一组可切换的按钮，选中态用实心次级底色，未选中保持幽灵态 */}
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          {tabs.map((tab) => {
+            const active = selectedGroup === tab.value
+            return (
+              <Button
+                key={tab.value}
+                type="button"
+                size="sm"
+                variant={active ? "secondary" : "ghost"}
+                aria-pressed={active}
+                onClick={() => setSelectedGroup(tab.value)}
+                className={cn(
+                  "h-8 gap-1.5 px-2.5 sm:px-3 text-xs font-medium",
+                  active
+                    ? "font-semibold text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span className="truncate">{tab.label}</span>
+                <Badge
+                  variant="secondary"
                   className={cn(
-                    "h-7 gap-1.5 px-2.5 sm:h-8 sm:px-3 text-xs font-medium",
-                    active
-                      ? "font-semibold text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground",
+                    "tnum h-4 min-w-4 px-1 text-2xs",
+                    active ? "bg-background text-foreground" : "bg-muted text-muted-foreground",
                   )}
                 >
-                  <span className="truncate">{tab.label}</span>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "tnum h-4 min-w-4 px-1 text-2xs",
-                      active ? "bg-background text-foreground" : "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {tab.count}
-                  </Badge>
-                </Button>
-              )
-            })}
-          </div>
-
-          <div className="relative w-full sm:w-64 shrink-0">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 sm:size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="km-ui-input pl-8 pr-8 text-xs h-7 sm:h-8"
-            />
-            {filter && (
-              <button
-                type="button"
-                onClick={() => setFilter("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
-          </div>
+                  {tab.count}
+                </Badge>
+              </Button>
+            )
+          })}
         </div>
 
-        {/* 数据表格：百分比固定列宽 + 移动端9列/桌面端11列，完全不横向滚动 */}
-        <div className="relative w-full overflow-hidden">
-          <Table
-            className="km-ui-table table-fixed w-full text-center text-xs md:text-sm [&_tbody_tr]:h-8 sm:[&_tbody_tr]:h-7.5"
-            containerClassName="relative w-full overflow-hidden"
-          >
-            {/* 使用 colgroup 锁死列宽百分比模型 */}
-            <colgroup>
-              <col className="w-[8%] md:w-[4%]" />
-              <col className="w-[26%] md:w-[22%]" />
-              <col className="hidden md:table-column md:w-[9%]" />
-              <col className="hidden md:table-column md:w-[7%]" />
-              <col className="hidden md:table-column md:w-[7%]" />
-              <col className="hidden md:table-column md:w-[6%]" />
-              <col className="w-[18%] md:w-[14%]" />
-              <col className="w-[12%] md:w-[7.66%]" />
-              <col className="w-[12%] md:w-[7.67%]" />
-              <col className="w-[12%] md:w-[7.67%]" />
-              <col className="w-[12%] md:w-[8%]" />
-            </colgroup>
+        <div className="relative w-full sm:w-64 shrink-0">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 sm:size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            className="km-ui-input pl-8 pr-8 text-xs h-8"
+          />
+          {filter && (
+            <button
+              type="button"
+              onClick={() => setFilter("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
 
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className={COL_CLASSES.status}>
-                  <span className="sr-only">{t("colStatus")}</span>
-                </TableHead>
-                <SortableHead
-                  className={COL_CLASSES.name}
-                  label={t("colName")}
-                  shortLabel={t("colName") === "节点名称" ? "节点" : undefined}
-                  field="name"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.os}
-                  label={t("colOs")}
-                  field="os"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.location}
-                  label={t("colLocation")}
-                  shortLabel={t("colLocation") === "地区" ? "位置" : undefined}
-                  field="location"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.uptime}
-                  label={t("colUptimeShort")}
-                  field="uptime"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.load}
-                  label={t("colLoad")}
-                  field="load"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.speed}
-                  label={t("colSpeedShort")}
-                  field="speed"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.cpu}
-                  label={t("colCpu")}
-                  field="cpu"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.mem}
-                  label={t("colMemShort")}
-                  field="mem"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.disk}
-                  label={t("colDisk")}
-                  field="disk"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
-                <SortableHead
-                  className={COL_CLASSES.traffic}
-                  label={t("colTrafficShort")}
-                  field="traffic"
-                  sortField={sortField}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
+      {/* 数据表格：平铺式边框容器，无内外嵌套卡片与阴影 */}
+      <div className="w-full overflow-hidden rounded-lg border border-border/80 bg-card/30">
+        <Table
+          className="km-ui-table table-fixed w-full text-center text-xs md:text-sm [&_tbody_tr]:h-8 sm:[&_tbody_tr]:h-7.5"
+          containerClassName="relative w-full overflow-hidden"
+        >
+          {/* 使用 colgroup 锁死列宽百分比模型 */}
+          <colgroup>
+            <col className="w-[8%] md:w-[4%]" />
+            <col className="w-[26%] md:w-[22%]" />
+            <col className="hidden md:table-column md:w-[9%]" />
+            <col className="hidden md:table-column md:w-[7%]" />
+            <col className="hidden md:table-column md:w-[7%]" />
+            <col className="hidden md:table-column md:w-[6%]" />
+            <col className="w-[18%] md:w-[14%]" />
+            <col className="w-[12%] md:w-[7.66%]" />
+            <col className="w-[12%] md:w-[7.67%]" />
+            <col className="w-[12%] md:w-[7.67%]" />
+            <col className="w-[12%] md:w-[8%]" />
+          </colgroup>
+
+          <TableHeader className="bg-muted/40 border-b border-border/80">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className={COL_CLASSES.status}>
+                <span className="sr-only">{t("colStatus")}</span>
+              </TableHead>
+              <SortableHead
+                className={COL_CLASSES.name}
+                label={t("colName")}
+                shortLabel={t("colName") === "节点名称" ? "节点" : undefined}
+                field="name"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.os}
+                label={t("colOs")}
+                field="os"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.location}
+                label={t("colLocation")}
+                shortLabel={t("colLocation") === "地区" ? "位置" : undefined}
+                field="location"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.uptime}
+                label={t("colUptimeShort")}
+                field="uptime"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.load}
+                label={t("colLoad")}
+                field="load"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.speed}
+                label={t("colSpeedShort")}
+                field="speed"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.cpu}
+                label={t("colCpu")}
+                field="cpu"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.mem}
+                label={t("colMemShort")}
+                field="mem"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.disk}
+                label={t("colDisk")}
+                field="disk"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+              <SortableHead
+                className={COL_CLASSES.traffic}
+                label={t("colTrafficShort")}
+                field="traffic"
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={isDesktop ? 11 : 7}
+                  className="h-28 text-center text-muted-foreground text-sm"
+                >
+                  {t("noNodes")}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={isDesktop ? 11 : 7}
-                    className="h-28 text-center text-muted-foreground text-sm"
-                  >
-                    {t("noNodes")}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((node, index) => (
-                  <Row key={node.uuid} node={node} index={index} isDesktop={isDesktop} />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+            ) : (
+              filtered.map((node, index) => (
+                <Row key={node.uuid} node={node} index={index} isDesktop={isDesktop} />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }
@@ -648,8 +644,8 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
 export function ServerTableSkeleton() {
   const isDesktop = useIsDesktop()
   return (
-    <Card className="km-node-card rounded-md border border-border bg-card p-3 sm:p-5 text-card-foreground shadow-sm">
-      <div className="relative w-full overflow-hidden">
+    <div className="km-instance-server-list w-full space-y-3">
+      <div className="w-full overflow-hidden rounded-lg border border-border/80 bg-card/30">
         <Table
           className="km-ui-table table-fixed w-full text-xs"
           containerClassName="relative w-full overflow-hidden"
@@ -667,7 +663,7 @@ export function ServerTableSkeleton() {
             <col className="w-[12%] md:w-[7.67%]" />
             <col className="w-[12%] md:w-[8%]" />
           </colgroup>
-          <TableHeader>
+          <TableHeader className="bg-muted/40 border-b border-border/80">
             <TableRow className="hover:bg-transparent">
               <TableHead className={COL_CLASSES.status}>
                 <Skeleton className="mx-auto size-2 rounded-full" />
@@ -715,6 +711,6 @@ export function ServerTableSkeleton() {
           </TableBody>
         </Table>
       </div>
-    </Card>
+    </div>
   )
 }
