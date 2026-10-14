@@ -139,14 +139,12 @@ function MainApp() {
           <div className="flex min-w-0 shrink items-center gap-2 sm:gap-4">
             <Link
               href="/"
-              className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85"
+              className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-85"
             >
-              <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <Activity className="size-4" />
               </div>
-              <h1 className="hidden max-w-36 truncate text-sm font-semibold tracking-tight @2xl:inline">
-                {siteTitle}
-              </h1>
+              <h1 className="truncate text-sm font-semibold tracking-tight">{siteTitle}</h1>
             </Link>
           </div>
 
