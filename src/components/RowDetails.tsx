@@ -1,10 +1,10 @@
 import { Infinity as InfinityIcon } from "lucide-react"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
-import { Latency, MetricCharts } from "@/components/NodeDetail"
+import { lazy, type ReactNode, Suspense, useEffect, useMemo, useState } from "react"
 import { Dot, OsIcon } from "@/components/NodeMarks"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Segmented } from "@/components/ui/segmented"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Node } from "@/lib/api"
 import {
   bytes,
@@ -21,6 +21,11 @@ import { fetchHistory, latencyWindow, RANGES } from "@/lib/history"
 import { useI18n } from "@/lib/i18n"
 import { knownPing, recordPing } from "@/lib/pings"
 import { cn } from "@/lib/utils"
+
+const Latency = lazy(() => import("@/components/NodeDetail").then((m) => ({ default: m.Latency })))
+const MetricCharts = lazy(() =>
+  import("@/components/NodeDetail").then((m) => ({ default: m.MetricCharts })),
+)
 
 function Block({
   title,
@@ -273,10 +278,14 @@ export function RowDetails({ node }: { node: Node }) {
         <Overview node={node} />
       ) : tab === "latency" ? (
         <div className="w-full max-w-full min-w-0 overflow-hidden rounded-md border border-border bg-card p-3 shadow-xs">
-          <Latency uuid={node.uuid} className="h-65 w-full min-w-0" onKnown={setLearned} />
+          <Suspense fallback={<Skeleton className="h-65 w-full rounded-md" />}>
+            <Latency uuid={node.uuid} className="h-65 w-full min-w-0" onKnown={setLearned} />
+          </Suspense>
         </div>
       ) : (
-        <MetricCharts uuid={node.uuid} node={node} chart={tab} hours={hours} />
+        <Suspense fallback={<Skeleton className="h-65 w-full rounded-md" />}>
+          <MetricCharts uuid={node.uuid} node={node} chart={tab} hours={hours} />
+        </Suspense>
       )}
     </div>
   )

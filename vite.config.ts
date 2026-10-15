@@ -10,7 +10,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": `${import.meta.dirname}/src` } },
   build: {
-    chunkSizeWarningLimit: 1200,
     // Flags stay files. Vite would inline every one under 4 KiB as a data URL,
     // and because the page imports the whole set, all of them would ship in the
     // entry chunk whichever flags a hub's nodes need.
