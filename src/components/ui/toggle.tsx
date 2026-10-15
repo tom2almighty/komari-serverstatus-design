@@ -24,7 +24,7 @@ export function Toggle({
       data-state={pressed ? "on" : "off"}
       onClick={() => onPressedChange(!pressed)}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-input bg-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] outline-none hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90",
+        "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-input bg-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90",
         className,
       )}
       {...props}

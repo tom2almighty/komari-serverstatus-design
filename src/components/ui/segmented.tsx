@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils"
  * -- can wear the same shape as the radio groups below.
  */
 export const SEGMENT = {
-  list: "inline-flex h-8 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground",
-  item: "inline-flex h-full items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer select-none [&_svg]:size-4 [&_svg]:shrink-0",
+  list: "inline-flex h-8 w-fit items-center justify-center rounded-lg bg-muted p-0.5 text-muted-foreground",
+  item: "inline-flex h-full items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer select-none [&_svg]:size-4 [&_svg]:shrink-0",
   on: "bg-background text-foreground shadow-sm dark:border-input dark:bg-input/30",
   off: "hover:text-foreground",
 }

@@ -233,20 +233,20 @@ export function despike(values: (number | null)[], window = 7, sigmas = 3): (num
         ? sorted[sorted.length >> 1]
         : (sorted[(sorted.length >> 1) - 1] + sorted[sorted.length >> 1]) / 2
     const devs = near.map((n) => Math.abs(n - mid)).sort((a, b) => a - b)
-    const mad = Math.max(
-      1,
+    const rawMad =
       devs.length % 2
         ? devs[devs.length >> 1]
-        : (devs[(devs.length >> 1) - 1] + devs[devs.length >> 1]) / 2,
-    )
-    return Math.abs(v - mid) > sigmas * 1.4826 * mad ? mid : v
+        : (devs[(devs.length >> 1) - 1] + devs[devs.length >> 1]) / 2
+    if (rawMad === 0) {
+      return Math.abs(v - mid) > 0 ? mid : v
+    }
+    return Math.abs(v - mid) > sigmas * 1.4826 * rawMad ? mid : v
   })
 }
 
-export function ewma(values: (number | null)[], times: number[], tau: number): (number | null)[] {
+export function ewma(values: (number | null)[], times: number[], tauMs: number): (number | null)[] {
   let mean: number | null = null
   let last = 0
-  const tauMs = tau < 100_000 ? tau * 1000 : tau
   return values.map((v, i) => {
     if (v === null) return null
     mean = mean === null ? v : mean + (1 - Math.exp(-(times[i] - last) / tauMs)) * (v - mean)
