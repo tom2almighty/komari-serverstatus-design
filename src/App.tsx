@@ -1,12 +1,25 @@
 import { Activity, Globe, Monitor, Moon, Settings, Sun } from "lucide-react"
-import { type CSSProperties, useEffect, useState, useSyncExternalStore } from "react"
+import {
+  type CSSProperties,
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react"
+import { NodePicker } from "@/components/NodePicker"
 import { ServerTable, ServerTableSkeleton } from "@/components/ServerTable"
 import { Button } from "@/components/ui/button"
 import { Segmented } from "@/components/ui/segmented"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api, type PublicSettings, useNodes } from "@/lib/api"
 import { I18nProvider, useI18n } from "@/lib/i18n"
-import { Link } from "@/lib/route"
+import { Link, useAppRoute } from "@/lib/route"
 import { clampPageWidth } from "@/lib/themes"
+
+const NodeDetail = lazy(() =>
+  import("@/components/NodeDetail").then((m) => ({ default: m.NodeDetail })),
+)
 
 const DARK_MEDIA = matchMedia("(prefers-color-scheme: dark)")
 type Mode = "light" | "dark" | "system"
@@ -102,13 +115,13 @@ function useAdmin() {
 }
 
 function MainApp() {
+  const route = useAppRoute()
   const { t, locale, setLocale } = useI18n()
   const [publicInfo, setPublicInfo] = useState<PublicSettings | null>(null)
   const admin = useAdmin()
   const rpcTransport = String(publicInfo?.theme_settings?.rpcTransport ?? "WebSocket")
   const { nodes, error, loading } = useNodes(rpcTransport)
   const { mode, dark, choose } = useTheme()
-
   useEffect(() => {
     api<PublicSettings>("/public")
       .then((info) => setPublicInfo(info))
@@ -181,7 +194,7 @@ function MainApp() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocale(locale === "zh-CN" ? "en" : "zh-CN")}
+              onClick={() => setLocale(locale === "zh-CN" ? "en-US" : "zh-CN")}
               title="Switch Language"
               className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
@@ -196,7 +209,7 @@ function MainApp() {
                 rel="noopener"
                 title={t("adminPanel")}
                 aria-label={t("adminPanel")}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 <Settings className="size-4" />
               </a>
@@ -224,7 +237,28 @@ function MainApp() {
           {loading && !nodes ? (
             <ServerTableSkeleton />
           ) : nodes ? (
-            <ServerTable nodes={nodes} />
+            route.tab === "charts" ? (
+              (() => {
+                const activeNode = nodes.find((n) => n.uuid === route.nodeUuid) || nodes[0] || null
+                if (!activeNode) {
+                  return <ServerTable nodes={nodes} />
+                }
+                return (
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start min-h-125">
+                    <div className="hidden w-64 shrink-0 md:block">
+                      <NodePicker nodes={nodes} selected={activeNode.uuid} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <Suspense fallback={<Skeleton className="h-96 w-full rounded-md" />}>
+                        <NodeDetail node={activeNode} />
+                      </Suspense>
+                    </div>
+                  </div>
+                )
+              })()
+            ) : (
+              <ServerTable nodes={nodes} />
+            )
           ) : null}
         </div>
       </main>

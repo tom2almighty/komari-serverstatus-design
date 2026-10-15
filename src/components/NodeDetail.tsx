@@ -1,12 +1,5 @@
 import { ArrowLeft } from "lucide-react"
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import {
   Area,
   AreaChart,
@@ -50,24 +43,12 @@ import {
   RANGES,
   type Series,
 } from "@/lib/history"
+import { useIsDesktop } from "@/lib/hooks"
 import { type TranslationKey, useI18n } from "@/lib/i18n"
 import { knownPing, recordPing } from "@/lib/pings"
 import { usePref } from "@/lib/prefs"
 import { Link } from "@/lib/route"
 import { cn } from "@/lib/utils"
-
-function useIsDesktop() {
-  return useSyncExternalStore(
-    (cb) => {
-      if (typeof window === "undefined") return () => {}
-      const m = window.matchMedia("(min-width: 768px)")
-      m.addEventListener("change", cb)
-      return () => m.removeEventListener("change", cb)
-    },
-    () => (typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : true),
-    () => true,
-  )
-}
 
 const AXIS = { stroke: "currentColor", fontSize: 10, tickLine: false, axisLine: false }
 const SERIES = { dot: false as const, strokeWidth: 1.5, isAnimationActive: false }

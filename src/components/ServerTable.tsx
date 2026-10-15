@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from "lucide-react"
-import { useMemo, useState, useSyncExternalStore } from "react"
+import { useMemo, useState } from "react"
 
 import { Dot, Flag, OsIcon } from "@/components/NodeMarks"
 import { RowDetails } from "@/components/RowDetails"
@@ -17,21 +17,9 @@ import {
 } from "@/components/ui/table"
 import type { Metrics, Node } from "@/lib/api"
 import { compact, duration, pair, percent, shortDistro } from "@/lib/format"
+import { useIsDesktop } from "@/lib/hooks"
 import { useI18n } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
-
-function useIsDesktop() {
-  return useSyncExternalStore(
-    (cb) => {
-      if (typeof window === "undefined") return () => {}
-      const m = window.matchMedia("(min-width: 768px)")
-      m.addEventListener("change", cb)
-      return () => m.removeEventListener("change", cb)
-    },
-    () => (typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : true),
-    () => true,
-  )
-}
 
 /**
  * ServerStatus style percentage progress bar with centered value text.
@@ -61,15 +49,15 @@ function ProgressBar({
   return (
     <div
       title={title}
-      className="relative w-full h-5 overflow-hidden rounded bg-muted/70 dark:bg-muted/40 shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)] @max-3xl:h-4"
+      className="relative w-full h-5 overflow-hidden rounded bg-muted/70 dark:bg-muted/40 shadow-inner @max-3xl:h-4"
     >
       {safe !== null && (
         <div
-          className={cn("h-full rounded-l-[3px] transition-[width] duration-500", tone)}
+          className={cn("h-full rounded-l-xs transition-[width] duration-500", tone)}
           style={{ width: `${safe}%` }}
         />
       )}
-      <span className="tabular-nums absolute inset-y-0 left-1.5 flex items-center text-[10px] leading-none text-foreground font-medium @max-3xl:left-0.5 @max-3xl:text-[8px]">
+      <span className="tabular-nums absolute inset-y-0 left-1.5 flex items-center text-2xs leading-none text-foreground font-medium @max-3xl:left-0.5">
         {label ?? (safe !== null ? `${safe.toFixed(1)}%` : "—")}
       </span>
     </div>
@@ -124,19 +112,19 @@ function TrafficCell({ node }: { node: Node }) {
  * status(4%), name(22%), os(9%), location(7%), uptime(7%), load(6%), speed(14%), cpu(7.66%), mem(7.67%), disk(7.67%), traffic(8%) = 100%
  */
 const COL_CLASSES = {
-  status: "w-[8%] md:w-[4%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  name: "w-[26%] md:w-[22%] px-1 py-1 md:px-1.5 md:py-1 text-left overflow-hidden align-middle",
-  os: "hidden md:table-cell md:w-[9%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  status: "px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  name: "px-1 py-1 md:px-1.5 md:py-1 text-left overflow-hidden align-middle",
+  os: "hidden md:table-cell px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
   location:
-    "hidden md:table-cell md:w-[7%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+    "hidden md:table-cell px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
   uptime:
-    "hidden md:table-cell md:w-[7%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  load: "hidden md:table-cell md:w-[6%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  speed: "w-[18%] md:w-[14%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  cpu: "w-[12%] md:w-[7.66%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  mem: "w-[12%] md:w-[7.67%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  disk: "w-[12%] md:w-[7.67%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
-  traffic: "w-[12%] md:w-[8%] px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+    "hidden md:table-cell px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  load: "hidden md:table-cell px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  speed: "px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  cpu: "px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  mem: "px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  disk: "hidden md:table-cell px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
+  traffic: "px-1 py-1 md:px-1.5 md:py-1 text-center overflow-hidden align-middle",
 }
 
 /**
@@ -324,7 +312,7 @@ function Row({ node, index, isDesktop }: { node: Node; index: number; isDesktop:
       {/* 展开详细信息行：严格匹配当前视口可见列数 (移动端 7 列，桌面端 11 列)，绝对不挤压或重排父表格 */}
       {open && (
         <TableRow className="bg-muted/15 hover:bg-muted/15">
-          <TableCell colSpan={isDesktop ? 11 : 7} className="p-0 text-left whitespace-normal">
+          <TableCell colSpan={isDesktop ? 11 : 6} className="p-0 text-left whitespace-normal">
             <div className="w-full max-w-full min-w-0 overflow-hidden p-2.5 sm:p-3.5 bg-muted/20 border-b">
               <RowDetails node={node} />
             </div>
@@ -517,17 +505,17 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
         >
           {/* 使用 colgroup 锁死列宽百分比模型 */}
           <colgroup>
-            <col className="w-[8%] md:w-[4%]" />
-            <col className="w-[26%] md:w-[22%]" />
-            <col className="hidden md:table-column md:w-[9%]" />
-            <col className="hidden md:table-column md:w-[7%]" />
-            <col className="hidden md:table-column md:w-[7%]" />
-            <col className="hidden md:table-column md:w-[6%]" />
-            <col className="w-[18%] md:w-[14%]" />
-            <col className="w-[12%] md:w-[7.66%]" />
-            <col className="w-[12%] md:w-[7.67%]" />
-            <col className="w-[12%] md:w-[7.67%]" />
-            <col className="w-[12%] md:w-[8%]" />
+            <col className="w-7 sm:w-8" />
+            <col className="w-auto" />
+            <col className="hidden md:table-column md:w-24" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="w-22 sm:w-26 md:w-32" />
+            <col className="w-13 sm:w-16 md:w-20" />
+            <col className="w-13 sm:w-16 md:w-20" />
+            <col className="hidden md:table-column md:w-20" />
+            <col className="w-16 sm:w-20 md:w-24" />
           </colgroup>
 
           <TableHeader className="bg-muted/40 border-b border-border/80">
@@ -623,7 +611,7 @@ export function ServerTable({ nodes }: { nodes: Node[] }) {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={isDesktop ? 11 : 7}
+                  colSpan={isDesktop ? 11 : 6}
                   className="h-28 text-center text-muted-foreground text-sm"
                 >
                   {t("noNodes")}
@@ -651,17 +639,17 @@ export function ServerTableSkeleton() {
           containerClassName="relative w-full overflow-hidden"
         >
           <colgroup>
-            <col className="w-[8%] md:w-[4%]" />
-            <col className="w-[26%] md:w-[22%]" />
-            <col className="hidden md:table-column md:w-[9%]" />
-            <col className="hidden md:table-column md:w-[7%]" />
-            <col className="hidden md:table-column md:w-[7%]" />
-            <col className="hidden md:table-column md:w-[6%]" />
-            <col className="w-[18%] md:w-[14%]" />
-            <col className="w-[12%] md:w-[7.66%]" />
-            <col className="w-[12%] md:w-[7.67%]" />
-            <col className="w-[12%] md:w-[7.67%]" />
-            <col className="w-[12%] md:w-[8%]" />
+            <col className="w-7 sm:w-8" />
+            <col className="w-auto" />
+            <col className="hidden md:table-column md:w-24" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="hidden md:table-column md:w-16" />
+            <col className="w-22 sm:w-26 md:w-32" />
+            <col className="w-13 sm:w-16 md:w-20" />
+            <col className="w-13 sm:w-16 md:w-20" />
+            <col className="hidden md:table-column md:w-20" />
+            <col className="w-16 sm:w-20 md:w-24" />
           </colgroup>
           <TableHeader className="bg-muted/40 border-b border-border/80">
             <TableRow className="hover:bg-transparent">
@@ -703,7 +691,7 @@ export function ServerTableSkeleton() {
           <TableBody>
             {Array.from({ length: 6 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={isDesktop ? 11 : 7} className="p-3">
+                <TableCell colSpan={isDesktop ? 11 : 6} className="p-3">
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
               </TableRow>

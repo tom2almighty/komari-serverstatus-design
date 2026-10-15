@@ -7,11 +7,14 @@ export type RouteState = {
 
 function parseRoute(): RouteState {
   const path = location.pathname
-  const nodeMatch = path.match(/^\/node\/([a-zA-Z0-9_-]+)/)
+  const hash = location.hash.replace(/^#/, "")
+  const target = hash || path
+
+  const nodeMatch = target.match(/(?:^|\/)node\/([a-zA-Z0-9_-]+)/)
   if (nodeMatch) {
     return { tab: "charts", nodeUuid: nodeMatch[1] }
   }
-  if (path === "/charts" || path.startsWith("/charts/")) {
+  if (target === "/charts" || target.includes("/charts")) {
     return { tab: "charts", nodeUuid: null }
   }
   return { tab: "servers", nodeUuid: null }
@@ -22,7 +25,11 @@ export function useAppRoute(): RouteState {
   useEffect(() => {
     const sync = () => setRoute(parseRoute())
     addEventListener("popstate", sync)
-    return () => removeEventListener("popstate", sync)
+    addEventListener("hashchange", sync)
+    return () => {
+      removeEventListener("popstate", sync)
+      removeEventListener("hashchange", sync)
+    }
   }, [])
   return route
 }
