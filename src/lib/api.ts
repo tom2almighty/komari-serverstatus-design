@@ -229,11 +229,14 @@ export function useNodes(transport?: string) {
     let pollTimer: number | undefined
     let healthTimer: number | undefined
     let clientsCache: KomariClient[] = []
+    let currentOnline: string[] = []
+    let currentLive: Record<string, KomariLiveMetric> = {}
     let stopped = false
+
     const updateCombined = (
       clients: KomariClient[],
-      onlineList: string[] = [],
-      liveMap: Record<string, KomariLiveMetric> = {},
+      onlineList: string[] = currentOnline,
+      liveMap: Record<string, KomariLiveMetric> = currentLive,
     ) => {
       const onlineSet = new Set(onlineList)
       const list = clients
@@ -251,7 +254,7 @@ export function useNodes(transport?: string) {
         const clientList = await api<KomariClient[]>("/nodes")
         if (stopped) return
         clientsCache = Array.isArray(clientList) ? clientList : []
-        updateCombined(clientsCache)
+        updateCombined(clientsCache, currentOnline, currentLive)
       } catch (e) {
         if (stopped) return
         setError(e instanceof Error ? e.message : "Failed to load nodes")
@@ -263,6 +266,13 @@ export function useNodes(transport?: string) {
 
     const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/clients`
 
+    const stopPolling = () => {
+      if (pollTimer !== undefined) {
+        clearInterval(pollTimer)
+        pollTimer = undefined
+      }
+    }
+
     const startPolling = () => {
       if (pollTimer !== undefined) return
       pollTimer = window.setInterval(async () => {
@@ -270,6 +280,7 @@ export function useNodes(transport?: string) {
         await loadClients()
       }, 5000)
     }
+
     const connectWs = () => {
       if (transport === "HTTP") {
         startPolling()
@@ -283,6 +294,7 @@ export function useNodes(transport?: string) {
       }
 
       socket.onopen = () => {
+        stopPolling()
         socket?.send("get")
       }
 
@@ -291,9 +303,9 @@ export function useNodes(transport?: string) {
           const payload = JSON.parse(event.data)
           const data = payload?.data
           if (data && typeof data === "object") {
-            const online: string[] = Array.isArray(data.online) ? data.online : []
-            const live: Record<string, KomariLiveMetric> = data.data || {}
-            updateCombined(clientsCache, online, live)
+            currentOnline = Array.isArray(data.online) ? data.online : []
+            currentLive = data.data || {}
+            updateCombined(clientsCache, currentOnline, currentLive)
           }
         } catch {}
       }
@@ -310,6 +322,7 @@ export function useNodes(transport?: string) {
         }, 5000)
       }
     }
+
     if (transport === "HTTP") {
       startPolling()
     } else {
@@ -324,7 +337,7 @@ export function useNodes(transport?: string) {
     return () => {
       stopped = true
       socket?.close()
-      clearInterval(pollTimer)
+      stopPolling()
       clearInterval(healthTimer)
     }
   }, [transport])
