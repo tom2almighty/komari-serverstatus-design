@@ -1,6 +1,8 @@
 # Komari ServerStatus Design
 
-本项目是为 [Komari](https://github.com/komari-monitor/komari) 监控服务开发的前端主题，采用 shadcn/ui 设计规范与 ServerStatus 数据展示布局。本项目参考并致谢 [monitor-theme-serverstatus](https://github.com/monitor-probe/monitor-theme-serverstatus)。
+[English](./README.en.md)
+
+本项目是为 Komari 监控服务开发的前端主题，采用 shadcn/ui 设计规范与 ServerStatus 数据展示布局。本项目参考并致谢 monitor-theme-serverstatus。
 
 ## 开发环境配置
 

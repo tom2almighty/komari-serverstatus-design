@@ -72,9 +72,15 @@ try {
 } catch {
   problems.push("komari-theme.json is not valid JSON")
 }
+const isNonEmptyTextOrI18n = (val) =>
+  (typeof val === "string" && val.trim().length > 0) ||
+  (typeof val === "object" &&
+    val !== null &&
+    Object.values(val).some((v) => typeof v === "string" && v.trim().length > 0))
+
 check(
-  typeof manifest.name === "string" && manifest.name.trim().length > 0,
-  "komari-theme.json name must be a non-empty string",
+  isNonEmptyTextOrI18n(manifest.name),
+  "komari-theme.json name must be a non-empty string or multilingual object",
 )
 check(
   typeof manifest.short === "string" && manifest.short.trim().length > 0,
@@ -93,7 +99,10 @@ check(
   typeof manifest.author === "string" && manifest.author.trim().length > 0,
   "komari-theme.json author must be a non-empty string",
 )
-check(typeof manifest.description === "string", "komari-theme.json description must be a string")
+check(
+  typeof manifest.description === "string" || typeof manifest.description === "object",
+  "komari-theme.json description must be a string or multilingual object",
+)
 
 const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8"))
 check(
