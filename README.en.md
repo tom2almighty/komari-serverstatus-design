@@ -6,12 +6,12 @@ Frontend theme for the Komari monitoring system, built with shadcn/ui design sta
 
 ## Development Setup
 
-- Runtime: Bun >= 1.2
+- Runtime: Node.js >= 24, pnpm >= 11
 - Start local development server:
 
 ```bash
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
 Local development server runs on `http://localhost:5173` by default.
@@ -21,8 +21,8 @@ Local development server runs on `http://localhost:5173` by default.
 Production build and package command:
 
 ```bash
-bun run build
-bun run verify
+pnpm run build
+pnpm run verify
 ```
 
 Build artifacts produce `theme.zip` in the project root, adhering to Komari theme specifications.
